@@ -4,17 +4,10 @@ module.exports = (grunt)->
 
 
   vendorsList = [
-          "#{privatePath}/js/vendors/jquery-2.1.1.min.js"
-          "#{privatePath}/js/vendors/angular.js"
-          "#{privatePath}/js/vendors/angular-animate.js"
-          "#{privatePath}/js/vendors/angular-resource.js"
-          "#{privatePath}/js/vendors/angular-route.js"
-          "#{privatePath}/js/vendors/bootstrap.js"
-          "#{privatePath}/js/vendors/underscore.js"
-          "#{privatePath}/js/vendors/spin.js"
+          "vendors/"
         ]
 
-  vendorsDest = "#{publicPath}/js/vendors.js"
+  vendorsDest = "dist/vendors.js"
 
 
   clientList = [
@@ -67,13 +60,6 @@ module.exports = (grunt)->
         dest: clientDest
         options: clientOptions
 
-      clientTest:
-        src: clientList.concat [
-          "#{privatePath}/tests/*.ts"
-        ]
-        dest: clientDest
-        options: clientOptions
-
 
     typedoc:
       build:
@@ -97,8 +83,8 @@ module.exports = (grunt)->
 
   grunt.registerTask 'doc', ['typedoc']
 
-  grunt.registerTask 'dist', ['clean:prebuild', 'typescript:client', 'concat:vendors']
 
+  grunt.registerTask 'dist', ['clean:prebuild', 'typescript:client'] #, 'concat:vendors']
   grunt.registerTask 'default', ['dist']
 
 

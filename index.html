@@ -6,8 +6,22 @@
     <link rel="stylesheet" href="main.css"/>
 </head>
 <body>
-    <h1>
-        A whole new world !
-    </h1>
+
+    <canvas id="dev-canvas" width="800" height="600">
+        Sadly, your browser doesn't support this technology. <br/>
+        Please update your browser.
+    </canvas>
+
+    <script src="vendors/three.js"></script>
+    <script src="vendors/OrbitControls.js"></script>
+    <script src="vendors/d3.js"></script>
+
+    <script src="src/GravityGraph.js"></script>
+
+    <script>
+        var gravityGraph = new GravityGraph({
+           target : 'dev-canvas'
+        });
+    </script>
 </body>
 </html>
