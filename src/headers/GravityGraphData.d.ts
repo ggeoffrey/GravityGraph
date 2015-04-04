@@ -19,9 +19,17 @@ interface IWorkerMessaqe { // extends MessageEvent{
 
 interface IOptions{
     target : string;
-    nodes: Array<INodeData>;
-    links: Array<ILinkData>;
+    opacity? : number;
+    backgroundColor? : number;
+    nodes?: Array<INodeData>;
+    links?: Array<ILinkData>;
 }
 
 interface INodeData{}
 interface ILinkData{}
+
+
+interface IMouse{
+    x: number;
+    y: number;
+}
