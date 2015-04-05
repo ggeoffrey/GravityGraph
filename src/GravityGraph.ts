@@ -262,6 +262,14 @@ module GravityGraph {
             this.controls.update();
         }
 
+        private updateClouds(){
+            var i = 0, len = this.clouds.length;
+            while (i < len) {
+                this.clouds[i].updateDirection();
+                i++;
+            }
+        }
+
 
         private nbTick : number = 0;
         private d3Tick() {
@@ -279,16 +287,9 @@ module GravityGraph {
                 var i = 0, len = this.links.length;
                 while (i < len) {
                     this.links[i].geometry.verticesNeedUpdate = true;
-                    //this.links[i].getSource().getCloud().updateDirection();
+                    this.links[i].getCloud().updateDirection();
                     i++;
                 }
-
-                i = 0, len = this.clouds.length;
-                while (i < len) {
-                    this.clouds[i].updateDirection();
-                    i++;
-                }
-
 
             }
             this.nbTick++;
@@ -481,6 +482,7 @@ module GravityGraph {
                 if(intersectPlane){
                     intersectPlane.point.sub(this.rootObject3D.position);
                     this.currentlySelectedObject.position.copy(intersectPlane.point);
+                    this.updateClouds();
                 }
                 return;
             }
@@ -604,7 +606,7 @@ module GravityGraph {
         });
 
         private data : INodeData;
-        private cloud : Cloud;
+
 
         private static materialsMap:{ [color : number] : THREE.MeshLambertMaterial } = {};
 
@@ -664,16 +666,7 @@ module GravityGraph {
             //}
         }
 
-        public setCloud(c : Cloud){
-            if(this.cloud){
-                this.cloud = null;
-                this.children = [];
-            }
 
-            this.cloud = c;
-        }
-
-        public getCloud(){  return this.cloud; }
 
         // DATA
 
@@ -698,6 +691,8 @@ module GravityGraph {
         private source : Node3D;
         private target : Node3D;
 
+        private cloud : Cloud;
+
         constructor(source:Node3D, target:Node3D) {
 
             this.source = source;
@@ -717,6 +712,12 @@ module GravityGraph {
             this.castShadow = true;
             this.position = this.source.position;
         }
+
+        public setCloud(c : Cloud){
+            this.cloud = c;
+        }
+
+        public getCloud(){  return this.cloud; }
 
 
         public getSource(){ return this.source; }
@@ -758,7 +759,7 @@ module GravityGraph {
             }
             super(geometry, Cloud.defaultMaterial);
 
-            this.support.getSource().setCloud(this);
+            this.support.setCloud(this);
         }
 
         private changeDefaults(){

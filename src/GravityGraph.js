@@ -165,6 +165,13 @@ var GravityGraph;
         Graph.prototype.update = function () {
             this.controls.update();
         };
+        Graph.prototype.updateClouds = function () {
+            var i = 0, len = this.clouds.length;
+            while (i < len) {
+                this.clouds[i].updateDirection();
+                i++;
+            }
+        };
         Graph.prototype.d3Tick = function () {
             // every X ticks
             if (this.nbTick % 50 === 0) {
@@ -179,12 +186,7 @@ var GravityGraph;
                 var i = 0, len = this.links.length;
                 while (i < len) {
                     this.links[i].geometry.verticesNeedUpdate = true;
-                    //this.links[i].getSource().getCloud().updateDirection();
-                    i++;
-                }
-                i = 0, len = this.clouds.length;
-                while (i < len) {
-                    this.clouds[i].updateDirection();
+                    this.links[i].getCloud().updateDirection();
                     i++;
                 }
             }
@@ -311,6 +313,7 @@ var GravityGraph;
                 if (intersectPlane) {
                     intersectPlane.point.sub(this.rootObject3D.position);
                     this.currentlySelectedObject.position.copy(intersectPlane.point);
+                    this.updateClouds();
                 }
                 return;
             }
@@ -423,16 +426,6 @@ var GravityGraph;
             material.color.set(color);
             //}
         };
-        Node3D.prototype.setCloud = function (c) {
-            if (this.cloud) {
-                this.cloud = null;
-                this.children = [];
-            }
-            this.cloud = c;
-        };
-        Node3D.prototype.getCloud = function () {
-            return this.cloud;
-        };
         // DATA
         Node3D.prototype.getData = function () {
             return this.data;
@@ -468,6 +461,12 @@ var GravityGraph;
             this.castShadow = true;
             this.position = this.source.position;
         };
+        Link3D.prototype.setCloud = function (c) {
+            this.cloud = c;
+        };
+        Link3D.prototype.getCloud = function () {
+            return this.cloud;
+        };
         Link3D.prototype.getSource = function () {
             return this.source;
         };
@@ -488,7 +487,7 @@ var GravityGraph;
                 geometry.vertices.push(new THREE.Vector3(0, 0, 0 + i * 5));
             }
             _super.call(this, geometry, Cloud.defaultMaterial);
-            this.support.getSource().setCloud(this);
+            this.support.setCloud(this);
         }
         Cloud.prototype.changeDefaults = function () {
         };
