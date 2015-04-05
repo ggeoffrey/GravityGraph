@@ -106,13 +106,13 @@ var GravityGraph;
             this.controls.staticMoving = true;
             this.controls.dynamicDampingFactor = 0.3;
             this.rootObject3D = new THREE.Object3D();
-            var rootContainerPosition = new THREE.Vector3(5000, 5000, 0);
+            var rootContainerPosition = new THREE.Vector3(5000, 5000, 5000);
             this.rootObject3D.position.copy(rootContainerPosition).divideScalar(2).negate();
             this.scene.add(this.rootObject3D);
         };
         Graph.prototype.initD3 = function () {
             var _this = this;
-            this.force = d3.layout.force();
+            this.force = d3.layout.force3d();
             this.force.charge(-100).linkDistance(60).size([5000, 5000]).on('tick', function () {
                 _this.d3Tick();
             });

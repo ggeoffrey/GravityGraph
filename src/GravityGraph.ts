@@ -171,7 +171,7 @@ module GravityGraph {
 
             this.rootObject3D = new THREE.Object3D();
 
-            var rootContainerPosition = new THREE.Vector3(5000, 5000, 0);
+            var rootContainerPosition = new THREE.Vector3(5000, 5000, 5000);
 
             this.rootObject3D.position.copy(rootContainerPosition).divideScalar(2).negate();
 
@@ -183,7 +183,7 @@ module GravityGraph {
 
         private initD3() {
 
-            this.force = d3.layout.force();
+            this.force = (<any> d3.layout).force3d();
             this.force
                 .charge(-100)
                 .linkDistance(60)
