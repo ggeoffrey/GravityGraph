@@ -11,391 +11,520 @@
 /// <reference path='headers/d3.d.ts' />
 
 
+module GravityGraph {
 
-class GravityGraph{
+    export class Graph {
 
-    private config : IOptions;
-
-
-    private paused : boolean;
-    private canvas : HTMLCanvasElement;
-
-    private mouse : IMouse;
-    private scene : THREE.Scene;
-    private renderer : THREE.WebGLRenderer;
-    private camera : THREE.PerspectiveCamera;
-
-    private controls : THREE.OrbitControls;
-
-    private sphereBackground : THREE.Mesh;
-
-    private lights : Array<THREE.Light>;
-    private rootObject3D : THREE.Object3D;
-
-    private nodes : Array<Node3D>;
+        private config:IOptions;
 
 
+        private paused:boolean;
+        private canvas:HTMLCanvasElement;
 
-    // D3
-    private force : D3.Layout.ForceLayout;
-    private static nodesColor : D3.Scale.OrdinalScale;
+        private mouse:IMouse;
+        private scene:THREE.Scene;
+        private renderer:THREE.WebGLRenderer;
+        private camera:THREE.PerspectiveCamera;
 
-    constructor (config : IOptions){
+        private controls:THREE.OrbitControls;
 
-        this.config = config;
+        private sphereBackground:THREE.Mesh;
 
-        console.info("GG : Init");
-        this.init3D()
+        private lights:Array<THREE.Light>;
+        private rootObject3D:THREE.Object3D;
 
-        this.paused = false;
-
-        console.info("Starting main loop.");
-
-
-        this.drawAxis();
-
-
-        this.initD3();
-
-        this.run();
-
-        /*this.D3Worker.postMessage({
-         message : "setNodes",
-         type: "array",
-         content : positions
-         });*/
-    }
-
-    /*
-    private startD3Worker()  : void{
-
-        this.D3Worker = new Worker('src/worker.js');
+        private nodes:Array<Node3D>;
+        private links:Array<Link3D>;
 
 
-        this.D3Worker.onmessage = (event: MessageEvent)=>{
-            if(event.data && event.data.message){
-                switch (event.data.message){
-                    case "log":
-                        console.log("Worker:");
-                        console.log(event.data.content);
-                        break;
-                    case "tick":
-                        this.updateNodesPositions(event.data.content);
-                        break;
-                    default :
-                        console.log("Worker:");
-                        console.log(event.data);
-                        break;
-                }
-            }
-        };
+        // D3
+        private force:D3.Layout.ForceLayout;
 
-        this.D3Worker.onerror = (event: ErrorEvent)=>{
-            console.error(event);
-        };
-    }*/
+        constructor(config:IOptions) {
 
-    /**
-     * Initialise a 3D scene
-     */
-    private init3D() : void {
+            this.config = config;
 
-        this.canvas = <HTMLCanvasElement> document.getElementById(this.config.target);
-        this.mouse = {
-            x:0,
-            y:0
-        };
+            console.info("GG : Init");
+            this.init3D();
 
-        this.lights = new Array();
+            this.paused = false;
+
+            console.info("Starting main loop.");
+
+            //this.drawAxis();
+
+            this.initD3();
+
+            this.bindEvents();
+
+            this.run();
+
+            /*this.D3Worker.postMessage({
+             message : "setNodes",
+             type: "array",
+             content : positions
+             });*/
+        }
+
+        /*
+         private startD3Worker()  : void{
+
+         this.D3Worker = new Worker('src/worker.js');
 
 
-        var transparentRenderer : boolean = (this.config.opacity && this.config.opacity < 0);
-        this.renderer = new THREE.WebGLRenderer({
-            canvas: this.canvas,
-            antialias: true,
-            alpha : transparentRenderer,
-            shadowMapEnabled : true,
-            shadowMapType : THREE.PCFShadowMap
-        });
+         this.D3Worker.onmessage = (event: MessageEvent)=>{
+         if(event.data && event.data.message){
+         switch (event.data.message){
+         case "log":
+         console.log("Worker:");
+         console.log(event.data.content);
+         break;
+         case "tick":
+         this.updateNodesPositions(event.data.content);
+         break;
+         default :
+         console.log("Worker:");
+         console.log(event.data);
+         break;
+         }
+         }
+         };
 
-        this.renderer.shadowMapEnabled = true;
-        this.renderer.shadowMapType = THREE.PCFShadowMap;
+         this.D3Worker.onerror = (event: ErrorEvent)=>{
+         console.error(event);
+         };
+         }*/
 
+        /**
+         * Initialise a 3D scene
+         */
+        private init3D():void {
 
-        this.renderer.setClearColor(
-            this.config.backgroundColor || 0x202020,
-            this.config.opacity || 0
-        );
+            this.canvas = <HTMLCanvasElement> document.getElementById(this.config.target);
+            this.mouse = {
+                x: 0,
+                y: 0
+            };
 
-        this.renderer.setSize(
-            this.canvas.width,
-            this.canvas.height
-        );
-
-        this.camera = new THREE.PerspectiveCamera(
-            70,
-            this.canvas.offsetWidth / this.canvas.offsetHeight,
-            1,
-            10000
-        );
-
-        this.camera.position.z = 900;
-
-
-        var sphereBackgroundWidth = 50;
-        var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
-        var sphereBackgroundMat = new THREE.MeshLambertMaterial({
-            color: 0xd0d0d0,//0x404040,
-            ambient: 0xffffff,
-            side: 1
-        });
-        this.sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
-
-        this.sphereBackground.receiveShadow = true;
-        this.sphereBackground.scale.set(50, 50, 50);
-
-        this.scene = new THREE.Scene();
-
-        this.scene.add(this.sphereBackground);
-
-        this.addDefaultLights();
-
-        this.controls = new THREE.OrbitControls(this.camera, this.canvas);
-        this.controls.rotateSpeed = 1.0;
-        this.controls.zoomSpeed = 1.2;
-        //this.controls.panSpeed = 0.8;
-        this.controls.noZoom = false;
-        this.controls.noPan = false;
-        //this.controls.staticMoving = true;
-        //this.controls.dynamicDampingFactor = 0.3;
-
-        this.rootObject3D = new THREE.Object3D();
-
-        var rootContainerPosition = new THREE.Vector3(5000, 5000, 0)
-
-        this.rootObject3D.position.copy(rootContainerPosition).divideScalar(2).negate();
+            this.lights = new Array();
 
 
-        this.scene.add(this.rootObject3D);
+            var transparentRenderer:boolean = (this.config.opacity && this.config.opacity < 0);
+            this.renderer = new THREE.WebGLRenderer({
+                canvas: this.canvas,
+                antialias: true,
+                alpha: transparentRenderer,
+                shadowMapEnabled: true,
+                shadowMapType: THREE.PCFShadowMap
+            });
 
-    }
+            this.renderer.shadowMapEnabled = true;
+            this.renderer.shadowMapType = THREE.PCFShadowMap;
 
 
-    private initD3(){
+            this.renderer.setClearColor(
+                this.config.backgroundColor || 0x202020,
+                this.config.opacity || 0
+            );
 
-        this.force = d3.layout.force();
-        this.force
-            .charge(-100)
-            .linkDistance(60)
-            .size([5000,5000])
+            this.renderer.setSize(
+                this.canvas.width,
+                this.canvas.height
+            );
+
+            this.camera = new THREE.PerspectiveCamera(
+                70,
+                this.canvas.offsetWidth / this.canvas.offsetHeight,
+                1,
+                10000
+            );
+
+            this.camera.position.z = 900;
+
+
+            var sphereBackgroundWidth = 50;
+            var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
+            var sphereBackgroundMat = new THREE.MeshLambertMaterial({
+                color: 0xd0d0d0,//0x404040,
+                ambient: 0xffffff,
+                side: 1
+            });
+            this.sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
+
+            this.sphereBackground.receiveShadow = true;
+            this.sphereBackground.scale.set(50, 50, 50);
+
+            this.scene = new THREE.Scene();
+
+            this.scene.add(this.sphereBackground);
+
+            this.addDefaultLights();
+
+            this.controls = new THREE.OrbitControls(this.camera, this.canvas);
+            this.controls.rotateSpeed = 1.0;
+            this.controls.zoomSpeed = 1.2;
+            (<any> this.controls).panSpeed = 0.8;
+            this.controls.noZoom = false;
+            this.controls.noPan = false;
+            ( <any> this.controls).staticMoving = true;
+            ( <any> this.controls).dynamicDampingFactor = 0.3;
+
+            this.rootObject3D = new THREE.Object3D();
+
+            var rootContainerPosition = new THREE.Vector3(5000, 5000, 0);
+
+            this.rootObject3D.position.copy(rootContainerPosition).divideScalar(2).negate();
+
+
+            this.scene.add(this.rootObject3D);
+
+        }
+
+
+        private initD3() {
+
+            this.force = d3.layout.force();
+            this.force
+                .charge(-100)
+                .linkDistance(60)
+                .size([5000, 5000])
+                .on('tick', ()=> {
+                    this.d3Tick();
+                })
             ;
 
 
+            // TESTS   --------------------------------------------------------------------------
 
-        this.nodes = [];
+            this.nodes = [];
+            this.links = [];
 
-        d3.json("data-test/miserables.json", (error, graph) => {
-            if(error){
-                console.error(error);
-            }
-            else{
+            d3.json("data-test/miserables.json", (error, graph) => {
+                if (error) {
+                    console.error(error);
+                }
+                else {
 
-                var position = [];
-                graph.nodes.forEach((node)=>{
-                    var n = new Node3D(node);
-                    this.nodes.push(n);
-                    this.rootObject3D.add(n);
-                    position.push(n.position);
-                });
+                    var position = [];
+                    graph.nodes.forEach((node)=> {
+                        var n = new Node3D(node);
+                        this.nodes.push(n);
+                        this.rootObject3D.add(n);
+                        position.push(n.position);
+                    });
 
-                this.force
-                    .nodes(position)
-                    .links(graph.links)
-                    .start();
-            }
-        });
-    }
+                    graph.links.forEach((link)=> {
+                        var source = this.nodes[link.source];
+                        var target = this.nodes[link.target];
+                        var link3D = new Link3D(source, target);
 
-    private run() : void {
-        if(!this.paused){
-            this.update();
-            this.render();
-            requestAnimationFrame(()=>{
-                this.run();
+                        this.links.push(link3D);
+                        this.rootObject3D.add(link3D);
+                    });
+
+                    this.force
+                        .nodes(position)
+                        .links(graph.links)
+                        .start();
+                }
             });
         }
-    }
 
-    public pause() : void {
-        this.paused = true;
-    }
-
-    public resume () : void {
-        this.paused = false;
-    }
-
-
-    private update() : void {
-        this.controls.update();
-    }
-
-    private render() : void {
-        this.renderer.render(this.scene, this.camera);
-    }
-
-
-    // D3
-
-    private updateNodesPositions(positions : Array<INodeData>   ){
-        var node_index = this.nodes.length-1;
-        var positions_index = positions.length-1;
-
-        while(node_index >= 0 && positions_index >= 0){
-            var n = this.nodes[node_index];
-            var pos = positions[positions_index];
-            n.position.x = pos.x;
-            n.position.y = pos.y;
-            n.position.z = pos.z;
-
-            node_index--;
-            positions_index--;
+        private run():void {
+            if (!this.paused) {
+                this.update();
+                this.render();
+                requestAnimationFrame(()=> {
+                    this.run();
+                });
+            }
         }
 
-    }
+        public pause():void {
+            this.paused = true;
+        }
+
+        public resume():void {
+            this.paused = false;
+        }
 
 
+        private update():void {
+            this.controls.update();
+        }
 
 
-    // UTILS
+        private nbTick : number = 0;
+        private d3Tick() {
 
-    private addDefaultLights() : void {
-        var x, y, z;
+            // every X ticks
+            if(this.nbTick % 50 === 0){
+                var i = 0, len = this.links.length;
+                while (i < len) {
+                    this.links[i].geometry.verticesNeedUpdate = true;
+                    this.links[i].geometry.computeBoundingSphere(); // avoid disappearing
+                    i++;
+                }
+            }
+            else{  // every tick
+                var i = 0, len = this.links.length;
+                while (i < len) {
+                    this.links[i].geometry.verticesNeedUpdate = true;
+                    i++;
+                }
+            }
+            this.nbTick++;
+        }
 
-        x = 3000;
-        y = 3000;
-        z = 3000;
 
-        this.addLight(x, y, z );
+        private render():void {
+            this.renderer.render(this.scene, this.camera);
+        }
 
-        x = -x;
-        this.addLight(x, y, z ,true);
 
-        y = -y;
-        this.addLight(x, y, z);
+        // D3
 
-        x = -x;
-        this.addLight(x, y, z, false);
         /*
-        z = -z;
-        this.addLight(x, y, z, false);
+         private updateNodesPositions(positions : Array<INodeData>   ){
 
-         y = -y;
-         addLight(x, y, z, false, '1 1 -1');
+         var node_index = this.nodes.length-1;
+         var positions_index = positions.length-1;
 
-         x = -x;
-         addLight(x, y, z, false, '-1 1 -1');
+         while(node_index >= 0 && positions_index >= 0){
+         var n = this.nodes[node_index];
+         var pos = positions[positions_index];
+         n.position.x = pos.x;
+         n.position.y = pos.y;
+         n.position.z = pos.z;
+
+         node_index--;
+         positions_index--;
+         }
+
+         }
          */
+
+
+        // UTILS
+
+        private addDefaultLights():void {
+            var x, y, z;
+
+            x = 3000;
+            y = 3000;
+            z = 3000;
+
+            this.addLight(x, y, z );
+
+            x = -x;
+            this.addLight(x, y, z ,true);
+
+            y = -y;
+            this.addLight(x, y, z);
+
+            x = -x;
+            this.addLight(x, y, z, false);
+            /*
+             z = -z;
+             this.addLight(x, y, z, false);
+
+             y = -y;
+             addLight(x, y, z, false, '1 1 -1');
+
+             x = -x;
+             addLight(x, y, z, false, '-1 1 -1');
+             */
+
+            //this.scene.add(new THREE.HemisphereLight(0xffffff, 0xffffff));
+
+        }
+
+        private addLight(x:number, y:number, z:number, shadows?:boolean, name?:string) {
+
+            var light:THREE.SpotLight = new THREE.SpotLight(0xffffff, 0.6);
+            light.name = name;
+            light.position.set(x, y, z);
+            light.castShadow = shadows;
+
+            light.shadowCameraNear = 200;
+            light.shadowCameraFar = this.camera.far;
+            light.shadowCameraFov = 50;
+
+            light.shadowBias = -0.00022;
+            light.shadowDarkness = 0.5;
+
+            light.shadowMapWidth = 2048;
+            light.shadowMapHeight = 2048;
+
+            this.lights.push(light);
+            this.scene.add(light);
+        }
+
+        private drawAxis():void {
+
+            var xMaterial = new THREE.LineBasicMaterial({color: 0xff0000});
+            var xGeometry = new THREE.Geometry();
+            xGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+            xGeometry.vertices.push(new THREE.Vector3(10000, 0, 0));
+
+            var xAxis = new THREE.Line(xGeometry, xMaterial);
+
+
+            var yMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+            var yGeometry = new THREE.Geometry();
+            yGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+            yGeometry.vertices.push(new THREE.Vector3(0, 10000, 0));
+
+            var yAxis = new THREE.Line(yGeometry, yMaterial);
+
+
+            var zMaterial = new THREE.LineBasicMaterial({color: 0x0000ff});
+            var zGeometry = new THREE.Geometry();
+            zGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+            zGeometry.vertices.push(new THREE.Vector3(0, 0, 10000));
+
+            var zAxis = new THREE.Line(zGeometry, zMaterial);
+
+
+            this.scene.add(xAxis);
+            this.scene.add(yAxis);
+            this.scene.add(zAxis);
+        }
+
+        private bindEvents(){
+            this.renderer.domElement.addEventListener( 'mousemove', (e:MouseEvent)=>{
+                this.onDocumentMouseMove(e);
+            }, false );
+            this.renderer.domElement.addEventListener( 'mousedown', (e:MouseEvent)=>{
+                this.onDocumentMouseDown(e);
+            }, false );
+            this.renderer.domElement.addEventListener( 'mouseup', (e:MouseEvent)=>{
+                this.onDocumentMouseUp(e);
+            }, false );
+        }
+
+        private onDocumentMouseMove(event : MouseEvent){
+
+        }
+
+        private onDocumentMouseDown(event : MouseEvent){
+
+        }
+        
+        private onDocumentMouseUp(event : MouseEvent){
+
+        }
     }
 
-    private addLight (x :number, y : number, z:number, shadows? : boolean, name? : string){
 
-        var light : THREE.SpotLight = new THREE.SpotLight(0xffffff, 0.6);
-        light.name = name;
-        light.position.set(x, y, z);
-        light.castShadow = shadows;
+    class Node3D extends THREE.Mesh {
 
-        light.shadowCameraNear = 200;
-        light.shadowCameraFar = this.camera.far;
-        light.shadowCameraFov = 50;
+        private static nodesColor = d3.scale.category10();
 
-        light.shadowBias = -0.00022;
-        light.shadowDarkness = 0.5;
-
-        light.shadowMapWidth = 2048;
-        light.shadowMapHeight = 2048;
-
-        this.lights.push(light);
-        this.scene.add(light);
-    }
-
-    private drawAxis() : void {
-
-        var xMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 })
-        var xGeometry = new THREE.Geometry();
-        xGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-        xGeometry.vertices.push(new THREE.Vector3(10000, 0, 0));
-
-        var xAxis = new THREE.Line(xGeometry, xMaterial);
-
-
-        var yMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00 })
-        var yGeometry = new THREE.Geometry();
-        yGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-        yGeometry.vertices.push(new THREE.Vector3(0, 10000, 0));
-
-        var yAxis = new THREE.Line(yGeometry, yMaterial);
-
-
-        var zMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff })
-        var zGeometry = new THREE.Geometry();
-        zGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-        zGeometry.vertices.push(new THREE.Vector3(0, 0, 10000));
-
-        var zAxis = new THREE.Line(zGeometry, zMaterial);
-
-
-        this.scene.add(xAxis);
-        this.scene.add(yAxis);
-        this.scene.add(zAxis);
-    }
-}
-
-
-class Node3D extends THREE.Mesh{
-
-    private static nodesColor = d3.scale.category10();
-
-    private static geometry : THREE.SphereGeometry = new THREE.SphereGeometry(10,10,10);
-    private static defaultMaterial : THREE.MeshLambertMaterial = new THREE.MeshLambertMaterial({
-        color: 0x0000ff,
-        transparent: false,
-        opacity: 0.75,
-        wireframe: false
-    });
-
-    private data: INodeData;
-
-    constructor(data: INodeData){
-
-        var material = new THREE.MeshLambertMaterial({
-            color: Node3D.nodesColor(data.group),
+        private static geometry:THREE.SphereGeometry = new THREE.SphereGeometry(10, 10, 10);
+        private static defaultMaterial:THREE.MeshLambertMaterial = new THREE.MeshLambertMaterial({
+            color: 0x0000ff,
             transparent: false,
             opacity: 0.75,
             wireframe: false
         });
 
-        super(Node3D.geometry, material);
+        private data:INodeData;
 
-        this.data = data;
-        this.changeDefaults();
+        private static materialsMap:{ [color : number] : THREE.MeshLambertMaterial } = {};
+
+        constructor(data:INodeData) {
+
+            /*var material = */
+
+            var color = Node3D.nodesColor(data.group);
+            var material;
+            if (Node3D.materialsMap[color]) {
+                material = Node3D.materialsMap[color];
+            }
+            else {
+                material = new THREE.MeshLambertMaterial({
+                    color: color,
+                    transparent: false,
+                    opacity: 0.75,
+                    wireframe: false
+                });
+                Node3D.materialsMap[color] = material;
+            }
+
+
+            super(Node3D.geometry, material);
+
+            this.data = data;
+            this.changeDefaults();
+        }
+
+        private changeDefaults() {
+
+            this.castShadow = true;
+            //this.receiveShadow = true;
+
+            //this.scale.x = 5;
+            //this.scale.y = 5;
+            //this.scale.z = 5;
+
+            //this.update();
+
+        }
+
+        // COLOR
+        public static setColorMethod(colorScale:D3.Scale.OrdinalScale) {
+            Node3D.nodesColor = colorScale;
+        }
+
+        public getColor():THREE.Color {
+            var material = <THREE.MeshLambertMaterial> this.material;
+            return material.color;
+        }
+
+        public setColor(color:number):void {
+            //if(color <= 0xffffff && color >= 0x000000){
+            var material = <THREE.MeshLambertMaterial> this.material;
+            material.color.set(color);
+            //}
+        }
+
+        // DATA
+
+        public getData():INodeData {
+            return this.data;
+        }
+
+        // REFRESH
+        public update() {
+            this.setColor(Node3D.nodesColor(this.data.group));
+            this.material.needsUpdate = true;
+        }
     }
 
-    private changeDefaults(){
+    class Link3D extends THREE.Line {
 
-        this.castShadow = true;
-        //this.receiveShadow = true;
+        private static defaultMaterial:THREE.LineBasicMaterial = new THREE.LineBasicMaterial({
+            color : 0x909090
+        });
 
-        //this.scale.x = 5;
-        //this.scale.y = 5;
-        //this.scale.z = 5;
+        constructor(source:Node3D, target:Node3D) {
 
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(source.position);
+            geometry.vertices.push(target.position);
+            geometry.vertices.push(source.position);
+            geometry.vertices.push(target.position);
+
+            super(geometry, Link3D.defaultMaterial);
+
+            this.changeDefaults();
+        }
+
+        private changeDefaults() {
+            this.receiveShadow = true;
+        }
 
     }
-}
 
-class Link3D extends THREE.Line{
-    constructor(data: ILinkData){
-        // TODO
-        super();
-    }
 }
