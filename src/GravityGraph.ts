@@ -260,12 +260,23 @@ module GravityGraph {
 
         private update():void {
             this.controls.update();
+
+            this.animateClouds();
+
         }
 
         private updateClouds(){
             var i = 0, len = this.clouds.length;
             while (i < len) {
-                this.clouds[i].updateDirection();
+                this.clouds[i].update();
+                i++;
+            }
+        }
+
+        private animateClouds(){
+            var i = 0, len = this.clouds.length;
+            while (i < len) {
+                this.clouds[i].animate();
                 i++;
             }
         }
@@ -278,16 +289,15 @@ module GravityGraph {
             if(this.nbTick % 50 === 0){
                 var i = 0, len = this.links.length;
                 while (i < len) {
-                    this.links[i].geometry.verticesNeedUpdate = true;
                     this.links[i].geometry.computeBoundingSphere(); // avoid disappearing
+                    this.links[i].update();
                     i++;
                 }
             }
             else{  // every tick
                 var i = 0, len = this.links.length;
                 while (i < len) {
-                    this.links[i].geometry.verticesNeedUpdate = true;
-                    this.links[i].getCloud().updateDirection();
+                    this.links[i].update();
                     i++;
                 }
 
@@ -679,6 +689,14 @@ module GravityGraph {
             this.setColor(Node3D.nodesColor(this.data.group));
             this.material.needsUpdate = true;
         }
+
+
+        // UTILS
+
+        public distanceTo(node : Node3D) : number {
+            return this.position.distanceTo(node.position);
+        }
+
     }
 
     class Link3D extends THREE.Line {
@@ -692,6 +710,8 @@ module GravityGraph {
         private target : Node3D;
 
         private cloud : Cloud;
+
+        private lineLength: number;
 
         constructor(source:Node3D, target:Node3D) {
 
@@ -719,9 +739,18 @@ module GravityGraph {
 
         public getCloud(){  return this.cloud; }
 
+        public getLineLength(){return this.lineLength; }
 
         public getSource(){ return this.source; }
         public getTarget(){ return this.target; }
+
+
+        public update(){
+            this.lineLength = this.source.distanceTo(this.target);
+            this.geometry.verticesNeedUpdate = true;
+            this.getCloud().update();
+        }
+
 
 
 
@@ -748,13 +777,20 @@ module GravityGraph {
 
         private support : Link3D;
 
+        private velocity : number;
+
+        private nbParticles: number;
+
         constructor(link : Link3D){
 
             this.support = link;
+            this.velocity = 0.25;
+
+            this.nbParticles = 10;
 
             var geometry = new THREE.Geometry();
 
-            for(var i = 0 ; i < 10; i++){
+            for(var i = 0 ; i < this.nbParticles; i++){
                 geometry.vertices.push(new THREE.Vector3(0, 0, 0+ i * 5));
             }
             super(geometry, Cloud.defaultMaterial);
@@ -766,12 +802,34 @@ module GravityGraph {
 
         }
 
-        public updateDirection(){
+        public update(){
             this.position.copy(this.support.geometry.vertices[0]);
             this.lookAt(this.support.geometry.vertices[1]);
         }
 
-        public updateVertices(){
+
+
+        public animate(){
+            var i = 0, len = this.geometry.vertices.length, vertice, previousVertice;
+
+            var lineLength = this.support.getLineLength();
+
+            while(i<len){
+                vertice = this.geometry.vertices[i]
+                vertice.z += this.velocity;
+                if(vertice.z > lineLength){
+                    vertice.z = 0;
+                }
+                if(previousVertice){
+                    if(vertice.z-previousVertice.z < lineLength / this.nbParticles ) {
+                        previousVertice.z+= this.velocity;
+                    }
+                }
+                previousVertice = vertice;
+
+                i++;
+            }
+
             this.geometry.verticesNeedUpdate = true;
         }
     }
