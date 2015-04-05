@@ -4,5 +4,6 @@ html, body{
 }
 
 #dev-canvas {
-    width: 100%;
+    margin : 2em;
+    box-shadow: 0 0 1em gray;
 }

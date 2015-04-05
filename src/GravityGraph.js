@@ -75,11 +75,11 @@ var GravityGraph;
                 canvas: this.canvas,
                 antialias: true,
                 alpha: transparentRenderer,
-                shadowMapEnabled: true,
-                shadowMapType: THREE.PCFShadowMap
+                devicePixelRatio: window.devicePixelRatio
             });
             this.renderer.shadowMapEnabled = true;
             this.renderer.shadowMapType = THREE.PCFShadowMap;
+            this.renderer.sortObjects = false;
             this.renderer.setClearColor(this.config.backgroundColor || 0x202020, this.config.opacity || 0);
             this.renderer.setSize(this.canvas.width, this.canvas.height);
             this.camera = new THREE.PerspectiveCamera(70, this.canvas.offsetWidth / this.canvas.offsetHeight, 1, 10000);
@@ -265,6 +265,10 @@ var GravityGraph;
         };
         Graph.prototype.bindEvents = function () {
             var _this = this;
+            window.addEventListener('resize', function (e) {
+                _this.onWindowResize(e);
+                ;
+            }, false);
             this.renderer.domElement.addEventListener('mousemove', function (e) {
                 _this.onDocumentMouseMove(e);
             }, false);
@@ -274,12 +278,93 @@ var GravityGraph;
             this.renderer.domElement.addEventListener('mouseup', function (e) {
                 _this.onDocumentMouseUp(e);
             }, false);
+            this.raycaster = new THREE.Raycaster();
+            this.projectionOffset = new THREE.Vector3(0, 0, 0);
+            this.intersectPlane = new THREE.Mesh(new THREE.PlaneBufferGeometry(2000, 2000, 8, 8), new THREE.MeshBasicMaterial({ color: 0x000000, opacity: 0.25, transparent: true }));
+            this.intersectPlane.visible = false;
+            this.scene.add(this.intersectPlane);
+        };
+        Graph.prototype.onWindowResize = function (event) {
+            var newWidth = this.renderer.domElement.clientWidth;
+            var newHeight = this.renderer.domElement.height;
+            this.camera.aspect = newWidth / newHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(newWidth, newHeight);
         };
         Graph.prototype.onDocumentMouseMove = function (event) {
+            event.preventDefault();
+            var boundingRect = this.canvas.getBoundingClientRect();
+            this.mouse.x = ((event.clientX - boundingRect.left) / this.canvas.offsetWidth) * 2 - 1;
+            this.mouse.y = -((event.clientY - boundingRect.top) / this.canvas.offsetHeight) * 2 + 1;
+            if (this.currentlySelectedObject) {
+                var intersectPlane = this.getPlanIntersect();
+                if (intersectPlane) {
+                    intersectPlane.point.sub(this.rootObject3D.position);
+                    this.currentlySelectedObject.position.copy(intersectPlane.point);
+                }
+                return;
+            }
+            var intersected = this.getTargetObject();
+            if (intersected) {
+                if (this.currentlyIntersectedObject != intersected.object) {
+                    this.currentlyIntersectedObject = intersected.object;
+                    this.intersectPlane.position.copy(this.currentlyIntersectedObject.position);
+                    this.intersectPlane.position.add(this.rootObject3D.position);
+                    this.intersectPlane.lookAt(this.camera.position);
+                }
+                this.canvas.style.cursor = 'pointer';
+            }
+            else {
+                this.currentlyIntersectedObject = null;
+                this.canvas.style.cursor = 'auto';
+            }
         };
         Graph.prototype.onDocumentMouseDown = function (event) {
+            event.preventDefault();
+            var target = this.getTargetObject();
+            if (target) {
+                this.controls.enabled = false;
+                this.currentlySelectedObject = target.object;
+                this.getPlanIntersect();
+                this.canvas.style.cursor = 'move';
+                this.force.resume();
+            }
         };
         Graph.prototype.onDocumentMouseUp = function (event) {
+            event.preventDefault();
+            this.controls.enabled = true;
+            if (this.currentlySelectedObject) {
+                /*
+                this.intersectPlane.position
+
+                    .copy( this.currentlyIntersectedObject.position )
+                    .add(this.rootObject3D.position);
+                */
+                this.currentlySelectedObject = null;
+                this.force.resume();
+            }
+            this.canvas.style.cursor = 'auto';
+        };
+        Graph.prototype.getPlanIntersect = function () {
+            var vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 0.5);
+            vector.unproject(this.camera);
+            this.raycaster.set(this.camera.position, vector.sub(this.camera.position).normalize());
+            var intersects = this.raycaster.intersectObjects([this.intersectPlane]);
+            if (intersects.length > 0) {
+                this.projectionOffset.copy(intersects[0].point).sub(this.intersectPlane.position).add(this.rootObject3D.position);
+                return intersects[0];
+            }
+            return null;
+        };
+        Graph.prototype.getTargetObject = function () {
+            var vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 1);
+            vector.unproject(this.camera);
+            this.raycaster.set(this.camera.position, vector.sub(this.camera.position).normalize());
+            var intersects = this.raycaster.intersectObjects(this.nodes);
+            if (intersects.length > 0) {
+                return intersects[0];
+            }
+            return null;
         };
         return Graph;
     })();
