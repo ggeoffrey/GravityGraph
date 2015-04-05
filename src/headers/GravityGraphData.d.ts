@@ -25,7 +25,12 @@ interface IOptions{
     links?: Array<ILinkData>;
 }
 
-interface INodeData{}
+interface INodeData{
+    x? : number;
+    y? : number;
+    z?: number;
+    group?:any;
+}
 interface ILinkData{}
 
 

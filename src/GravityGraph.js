@@ -11,36 +11,55 @@ var __extends = this.__extends || function (d, b) {
 /// <reference path='headers/three.d.ts' />
 /// <reference path='headers/three-orbitcontrols.d.ts' />
 /// <reference path='headers/three-projector.d.ts' />
+/// <reference path='headers/d3.d.ts' />
 var GravityGraph = (function () {
     function GravityGraph(config) {
         this.config = config;
-        this.startD3Worker();
         console.info("GG : Init");
-        this.init();
+        this.init3D();
         this.paused = false;
         console.info("Starting main loop.");
-        this.run();
         this.drawAxis();
+        this.initD3();
+        this.run();
+        /*this.D3Worker.postMessage({
+         message : "setNodes",
+         type: "array",
+         content : positions
+         });*/
     }
-    GravityGraph.prototype.startD3Worker = function () {
-        this.D3Worker = new Worker('src/d3_worker.js');
-        this.D3Worker.onmessage = function (event) {
-            if (event.data && event.data.message === "log") {
-                console.log("Worker:");
-                console.log(event.data.content);
-            }
-            else {
-                console.log(event.data);
+    /*
+    private startD3Worker()  : void{
+
+        this.D3Worker = new Worker('src/worker.js');
+
+
+        this.D3Worker.onmessage = (event: MessageEvent)=>{
+            if(event.data && event.data.message){
+                switch (event.data.message){
+                    case "log":
+                        console.log("Worker:");
+                        console.log(event.data.content);
+                        break;
+                    case "tick":
+                        this.updateNodesPositions(event.data.content);
+                        break;
+                    default :
+                        console.log("Worker:");
+                        console.log(event.data);
+                        break;
+                }
             }
         };
-        this.D3Worker.onerror = function (event) {
+
+        this.D3Worker.onerror = (event: ErrorEvent)=>{
             console.error(event);
         };
-    };
+    }*/
     /**
      * Initialise a 3D scene
      */
-    GravityGraph.prototype.init = function () {
+    GravityGraph.prototype.init3D = function () {
         this.canvas = document.getElementById(this.config.target);
         this.mouse = {
             x: 0,
@@ -55,11 +74,13 @@ var GravityGraph = (function () {
             shadowMapEnabled: true,
             shadowMapType: THREE.PCFShadowMap
         });
+        this.renderer.shadowMapEnabled = true;
+        this.renderer.shadowMapType = THREE.PCFShadowMap;
         this.renderer.setClearColor(this.config.backgroundColor || 0x202020, this.config.opacity || 0);
         this.renderer.setSize(this.canvas.width, this.canvas.height);
         this.camera = new THREE.PerspectiveCamera(70, this.canvas.offsetWidth / this.canvas.offsetHeight, 1, 10000);
         this.camera.position.z = 900;
-        var sphereBackgroundWidth = 10;
+        var sphereBackgroundWidth = 50;
         var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
         var sphereBackgroundMat = new THREE.MeshLambertMaterial({
             color: 0xd0d0d0,
@@ -68,7 +89,7 @@ var GravityGraph = (function () {
         });
         this.sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
         this.sphereBackground.receiveShadow = true;
-        this.sphereBackground.scale.set(260, 260, 260);
+        this.sphereBackground.scale.set(50, 50, 50);
         this.scene = new THREE.Scene();
         this.scene.add(this.sphereBackground);
         this.addDefaultLights();
@@ -81,7 +102,30 @@ var GravityGraph = (function () {
         //this.controls.staticMoving = true;
         //this.controls.dynamicDampingFactor = 0.3;
         this.rootObject3D = new THREE.Object3D();
+        var rootContainerPosition = new THREE.Vector3(5000, 5000, 0);
+        this.rootObject3D.position.copy(rootContainerPosition).divideScalar(2).negate();
         this.scene.add(this.rootObject3D);
+    };
+    GravityGraph.prototype.initD3 = function () {
+        var _this = this;
+        this.force = d3.layout.force();
+        this.force.charge(-100).linkDistance(60).size([5000, 5000]);
+        this.nodes = [];
+        d3.json("data-test/miserables.json", function (error, graph) {
+            if (error) {
+                console.error(error);
+            }
+            else {
+                var position = [];
+                graph.nodes.forEach(function (node) {
+                    var n = new Node3D(node);
+                    _this.nodes.push(n);
+                    _this.rootObject3D.add(n);
+                    position.push(n.position);
+                });
+                _this.force.nodes(position).links(graph.links).start();
+            }
+        });
     };
     GravityGraph.prototype.run = function () {
         var _this = this;
@@ -105,23 +149,36 @@ var GravityGraph = (function () {
     GravityGraph.prototype.render = function () {
         this.renderer.render(this.scene, this.camera);
     };
+    // D3
+    GravityGraph.prototype.updateNodesPositions = function (positions) {
+        var node_index = this.nodes.length - 1;
+        var positions_index = positions.length - 1;
+        while (node_index >= 0 && positions_index >= 0) {
+            var n = this.nodes[node_index];
+            var pos = positions[positions_index];
+            n.position.x = pos.x;
+            n.position.y = pos.y;
+            n.position.z = pos.z;
+            node_index--;
+            positions_index--;
+        }
+    };
     // UTILS
     GravityGraph.prototype.addDefaultLights = function () {
         var x, y, z;
         x = 3000;
         y = 3000;
         z = 3000;
-        this.addLight(x, y, z, true);
+        this.addLight(x, y, z);
         x = -x;
         this.addLight(x, y, z, true);
         y = -y;
         this.addLight(x, y, z);
+        x = -x;
+        this.addLight(x, y, z, false);
         /*
-         x = -x;
-         addLight(x, y, z, false, '1 -1 1');
-
-         z = -z;
-         addLight(x, y, z, false, '1 -1 -1');
+        z = -z;
+        this.addLight(x, y, z, false);
 
          y = -y;
          addLight(x, y, z, false, '1 1 -1');
@@ -131,7 +188,6 @@ var GravityGraph = (function () {
          */
     };
     GravityGraph.prototype.addLight = function (x, y, z, shadows, name) {
-        if (shadows === void 0) { shadows = false; }
         var light = new THREE.SpotLight(0xffffff, 0.6);
         light.name = name;
         light.position.set(x, y, z);
@@ -171,9 +227,31 @@ var GravityGraph = (function () {
 var Node3D = (function (_super) {
     __extends(Node3D, _super);
     function Node3D(data) {
-        // TODO
-        _super.call(this);
+        var material = new THREE.MeshLambertMaterial({
+            color: Node3D.nodesColor(data.group),
+            transparent: false,
+            opacity: 0.75,
+            wireframe: false
+        });
+        _super.call(this, Node3D.geometry, material);
+        this.data = data;
+        this.changeDefaults();
     }
+    Node3D.prototype.changeDefaults = function () {
+        this.castShadow = true;
+        //this.receiveShadow = true;
+        //this.scale.x = 5;
+        //this.scale.y = 5;
+        //this.scale.z = 5;
+    };
+    Node3D.nodesColor = d3.scale.category10();
+    Node3D.geometry = new THREE.SphereGeometry(10, 10, 10);
+    Node3D.defaultMaterial = new THREE.MeshLambertMaterial({
+        color: 0x0000ff,
+        transparent: false,
+        opacity: 0.75,
+        wireframe: false
+    });
     return Node3D;
 })(THREE.Mesh);
 var Link3D = (function (_super) {
