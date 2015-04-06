@@ -18,6 +18,15 @@ var GravityGraph;
         function Graph(config) {
             this.nbTick = 0;
             this.config = config;
+            if (config.stats) {
+                this.stats = new Stats();
+                this.stats.setMode(0); // 0: fps, 1: ms
+                // align top-left
+                this.stats.domElement.style.position = 'absolute';
+                this.stats.domElement.style.left = '0px';
+                this.stats.domElement.style.top = '0px';
+                document.body.appendChild(this.stats.domElement);
+            }
             console.info("GG : Init");
             this.init3D();
             this.paused = false;
@@ -149,8 +158,10 @@ var GravityGraph;
         Graph.prototype.run = function () {
             var _this = this;
             if (!this.paused) {
+                this.stats.begin();
                 this.update();
                 this.render();
+                this.stats.end();
                 requestAnimationFrame(function () {
                     _this.run();
                 });
@@ -490,7 +501,10 @@ var GravityGraph;
         Link3D.prototype.update = function () {
             this.lineLength = this.source.distanceTo(this.target);
             this.geometry.verticesNeedUpdate = true;
-            this.getCloud().update();
+            var cloud = this.getCloud();
+            if (cloud) {
+                cloud.update();
+            }
         };
         Link3D.defaultMaterial = new THREE.LineBasicMaterial({
             color: 0x909090

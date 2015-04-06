@@ -4,6 +4,11 @@
 /// <reference path='three-projector.d.ts' />
 
 
+
+interface Window{
+    rendererStats : any;
+}
+
 interface IWorker extends Worker{
     postMessage(message : IWorkerMessaqe, rest? : any) : void;
 }
@@ -23,6 +28,7 @@ interface IOptions{
     backgroundColor? : number;
     nodes?: Array<INodeData>;
     links?: Array<ILinkData>;
+    stats?: boolean;
 }
 
 interface INodeData{
@@ -37,4 +43,12 @@ interface ILinkData{}
 interface IMouse{
     x: number;
     y: number;
+}
+
+
+declare class Stats{
+    public setMode(n:number);
+    public domElement : HTMLElement;
+    public begin();
+    public end();
 }

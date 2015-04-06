@@ -38,6 +38,9 @@ module GravityGraph {
 
         private clouds: Array<Cloud>;
 
+        // STATS
+
+        private stats : Stats;
 
         // D3
         private force:D3.Layout.ForceLayout;
@@ -45,6 +48,18 @@ module GravityGraph {
         constructor(config:IOptions) {
 
             this.config = config;
+
+            if(config.stats){
+                this.stats = new Stats();
+                this.stats.setMode(0); // 0: fps, 1: ms
+
+                // align top-left
+                this.stats.domElement.style.position = 'absolute';
+                this.stats.domElement.style.left = '0px';
+                this.stats.domElement.style.top = '0px';
+
+                document.body.appendChild( this.stats.domElement );
+            }
 
             console.info("GG : Init");
             this.init3D();
@@ -241,8 +256,12 @@ module GravityGraph {
 
         private run():void {
             if (!this.paused) {
+                this.stats.begin();
+
                 this.update();
                 this.render();
+
+                this.stats.end();
                 requestAnimationFrame(()=> {
                     this.run();
                 });
@@ -258,11 +277,11 @@ module GravityGraph {
         }
 
 
+
         private update():void {
             this.controls.update();
 
             this.animateClouds();
-
         }
 
         private updateClouds(){
@@ -748,7 +767,11 @@ module GravityGraph {
         public update(){
             this.lineLength = this.source.distanceTo(this.target);
             this.geometry.verticesNeedUpdate = true;
-            this.getCloud().update();
+
+            var cloud = this.getCloud();
+            if (cloud) {
+                cloud.update();
+            }
         }
 
 

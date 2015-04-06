@@ -16,13 +16,19 @@
     <script src="vendors/OrbitControls.js"></script>
     <script src="vendors/d3.js"></script>
     <script src="vendors/d3.layout.force3D.js"></script>
+    <script src="vendors/Stats.js"></script>
+
 
     <script src="src/GravityGraph.js"></script>
 
     <script>
+
         var gravityGraph = new GravityGraph.Graph({
-           target : 'dev-canvas'
+            target : 'dev-canvas',
+            stats : true
         });
+
+
     </script>
 </body>
 </html>
