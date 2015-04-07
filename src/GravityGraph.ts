@@ -49,17 +49,7 @@ module GravityGraph {
 
             this.config = config;
 
-            if(config.stats){
-                this.stats = new Stats();
-                this.stats.setMode(0); // 0: fps, 1: ms
-
-                // align top-left
-                this.stats.domElement.style.position = 'absolute';
-                this.stats.domElement.style.left = '0px';
-                this.stats.domElement.style.top = '0px';
-
-                document.body.appendChild( this.stats.domElement );
-            }
+            if(this.config.stats)   this.enableStats();
 
             console.info("GG : Init");
             this.init3D();
@@ -254,6 +244,21 @@ module GravityGraph {
             });
         }
 
+
+        private enableStats(){
+
+           this.stats = new Stats();
+           this.stats.setMode(0); // 0: fps, 1: ms
+
+           // align top-left
+           this.stats.domElement.style.position = 'absolute';
+           this.stats.domElement.style.left = '0px';
+           this.stats.domElement.style.top = '0px';
+
+           document.body.appendChild( this.stats.domElement );
+
+        }
+
         private run():void {
             if (!this.paused) {
                 this.stats.begin();
@@ -356,34 +361,45 @@ module GravityGraph {
         // UTILS
 
         private addDefaultLights():void {
-            var x, y, z;
 
-            x = 3000;
-            y = 3000;
-            z = 3000;
+            if(!this.config.lights){
+                this.config.lights = 'basic';
+            }
 
-            this.addLight(x, y, z );
+            if(this.config.lights === 'basic' ) {
+                this.scene.add(new THREE.HemisphereLight(0xffffff, 0xffffff));
+            }
+            else if(this.config.lights === 'advenced')
+            {
 
-            x = -x;
-            this.addLight(x, y, z ,true);
+                var x, y, z;
 
-            y = -y;
-            //this.addLight(x, y, z);
+                x = 3000;
+                y = 3000;
+                z = 3000;
 
-            x = -x;
-            //this.addLight(x, y, z, false);
-            /*
-             z = -z;
-             this.addLight(x, y, z, false);
+                this.addLight(x, y, z );
 
-             y = -y;
-             addLight(x, y, z, false, '1 1 -1');
+                x = -x;
+                this.addLight(x, y, z ,true);
 
-             x = -x;
-             addLight(x, y, z, false, '-1 1 -1');
-             */
+                y = -y;
+                this.addLight(x, y, z);
 
-            //this.scene.add(new THREE.HemisphereLight(0xffffff, 0xffffff));
+                x = -x;
+                //this.addLight(x, y, z, false);
+                /*
+                 z = -z;
+                 this.addLight(x, y, z, false);
+
+                 y = -y;
+                 addLight(x, y, z, false, '1 1 -1');
+
+                 x = -x;
+                 addLight(x, y, z, false, '-1 1 -1');
+                 */
+            }
+
 
         }
 

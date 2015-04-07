@@ -29,6 +29,7 @@ interface IOptions{
     nodes?: Array<INodeData>;
     links?: Array<ILinkData>;
     stats?: boolean;
+    lights? : string;  // in {basic, advenced}
 }
 
 interface INodeData{

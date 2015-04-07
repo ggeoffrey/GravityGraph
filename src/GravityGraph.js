@@ -18,15 +18,8 @@ var GravityGraph;
         function Graph(config) {
             this.nbTick = 0;
             this.config = config;
-            if (config.stats) {
-                this.stats = new Stats();
-                this.stats.setMode(0); // 0: fps, 1: ms
-                // align top-left
-                this.stats.domElement.style.position = 'absolute';
-                this.stats.domElement.style.left = '0px';
-                this.stats.domElement.style.top = '0px';
-                document.body.appendChild(this.stats.domElement);
-            }
+            if (this.config.stats)
+                this.enableStats();
             console.info("GG : Init");
             this.init3D();
             this.paused = false;
@@ -155,6 +148,15 @@ var GravityGraph;
                 }
             });
         };
+        Graph.prototype.enableStats = function () {
+            this.stats = new Stats();
+            this.stats.setMode(0); // 0: fps, 1: ms
+            // align top-left
+            this.stats.domElement.style.position = 'absolute';
+            this.stats.domElement.style.left = '0px';
+            this.stats.domElement.style.top = '0px';
+            document.body.appendChild(this.stats.domElement);
+        };
         Graph.prototype.run = function () {
             var _this = this;
             if (!this.paused) {
@@ -235,28 +237,24 @@ var GravityGraph;
          */
         // UTILS
         Graph.prototype.addDefaultLights = function () {
-            var x, y, z;
-            x = 3000;
-            y = 3000;
-            z = 3000;
-            this.addLight(x, y, z);
-            x = -x;
-            this.addLight(x, y, z, true);
-            y = -y;
-            //this.addLight(x, y, z);
-            x = -x;
-            //this.addLight(x, y, z, false);
-            /*
-             z = -z;
-             this.addLight(x, y, z, false);
-
-             y = -y;
-             addLight(x, y, z, false, '1 1 -1');
-
-             x = -x;
-             addLight(x, y, z, false, '-1 1 -1');
-             */
-            //this.scene.add(new THREE.HemisphereLight(0xffffff, 0xffffff));
+            if (!this.config.lights) {
+                this.config.lights = 'basic';
+            }
+            if (this.config.lights === 'basic') {
+                this.scene.add(new THREE.HemisphereLight(0xffffff, 0xffffff));
+            }
+            else if (this.config.lights === 'advenced') {
+                var x, y, z;
+                x = 3000;
+                y = 3000;
+                z = 3000;
+                this.addLight(x, y, z);
+                x = -x;
+                this.addLight(x, y, z, true);
+                y = -y;
+                this.addLight(x, y, z);
+                x = -x;
+            }
         };
         Graph.prototype.addLight = function (x, y, z, shadows, name) {
             var light = new THREE.SpotLight(0xffffff, 0.6);
