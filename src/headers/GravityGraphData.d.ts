@@ -23,7 +23,11 @@ interface IOptions{
     backgroundColor? : number;
     nodes?: Array<INodeData>;
     links?: Array<ILinkData>;
+    quality? : string;
+    flat? : boolean;
 }
+
+
 
 interface INodeData{
     x? : number;
@@ -31,6 +35,7 @@ interface INodeData{
     z?: number;
     group?:any;
 }
+
 interface ILinkData{}
 
 

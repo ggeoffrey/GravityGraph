@@ -10,12 +10,17 @@
 
 /// <reference path='headers/d3.d.ts' />
 
+/// <reference path='Utils.ts' />
+
 
 module GravityGraph {
 
+
+    var U : GravityGraphTools.Utils = new GravityGraphTools.Utils();
+
     export class Graph {
 
-        private config:IOptions;
+        private config: GravityGraphTools.Options;
 
 
         private paused:boolean;
@@ -24,7 +29,7 @@ module GravityGraph {
         private mouse:IMouse;
         private scene:THREE.Scene;
         private renderer:THREE.WebGLRenderer;
-        private camera:THREE.PerspectiveCamera;
+        private camera:THREE.Camera;
 
         private controls:THREE.OrbitControls;
 
@@ -44,7 +49,7 @@ module GravityGraph {
 
         constructor(config:IOptions) {
 
-            this.config = config;
+            this.config = new GravityGraphTools.Options(config);
 
             console.info("GG : Init");
             this.init3D();
@@ -111,7 +116,7 @@ module GravityGraph {
             this.lights = new Array();
 
 
-            var transparentRenderer:boolean = (this.config.opacity && this.config.opacity < 0);
+            var transparentRenderer = this.config.isTransparent();
             this.renderer = new THREE.WebGLRenderer({
                 canvas: this.canvas,
                 antialias: true,
@@ -119,14 +124,18 @@ module GravityGraph {
                 devicePixelRatio: window.devicePixelRatio
             });
 
+            if(!transparentRenderer){
+                this.config.opacity = 1;
+            }
+
             this.renderer.shadowMapEnabled = true;
             this.renderer.shadowMapType = THREE.PCFShadowMap;
             this.renderer.sortObjects = false;
 
 
             this.renderer.setClearColor(
-                this.config.backgroundColor || 0x202020,
-                this.config.opacity || 0
+                this.config.backgroundColor,
+                this.config.opacity
             );
 
             this.renderer.setSize(
@@ -134,58 +143,59 @@ module GravityGraph {
                 this.canvas.height
             );
 
-            this.camera = new THREE.PerspectiveCamera(
-                70,
-                this.canvas.offsetWidth / this.canvas.offsetHeight,
-                1,
-                10000
-            );
-
-            this.camera.position.z = 900;
-
-
-            var sphereBackgroundWidth = 50;
-            var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
-            var sphereBackgroundMat = new THREE.MeshLambertMaterial({
-                color: 0xd0d0d0,//0x404040,
-                ambient: 0xffffff,
-                side: 1
-            });
-            this.sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
-
-            this.sphereBackground.receiveShadow = true;
-            this.sphereBackground.scale.set(50, 50, 50);
 
             this.scene = new THREE.Scene();
 
-            this.scene.add(this.sphereBackground);
+            if(this.config.quality == EQuality.HIGH){
+               this.sphereBackground = this.addSphereBackground();
+            }
 
-            this.addDefaultLights();
+            this.addCamera();
 
-            this.controls = new THREE.OrbitControls(this.camera, this.canvas);
-            this.controls.rotateSpeed = 1.0;
-            this.controls.zoomSpeed = 1.2;
-            (<any> this.controls).panSpeed = 0.8;
-            this.controls.noZoom = false;
-            this.controls.noPan = false;
-            ( <any> this.controls).staticMoving = true;
-            ( <any> this.controls).dynamicDampingFactor = 0.3;
+            this.addLights();
 
-            this.rootObject3D = new THREE.Object3D();
+            this.addControls();
 
-            var rootContainerPosition = new THREE.Vector3(1000, 1000, 1000);
-
-            this.rootObject3D.position.copy(rootContainerPosition).divideScalar(2).negate();
-
-
-            this.scene.add(this.rootObject3D);
+            this.addRoot();
 
         }
 
 
+
+        private addCamera(){
+
+           this.camera = new THREE.PerspectiveCamera(
+                70,
+                this.canvas.offsetWidth / this.canvas.offsetHeight,
+                1,
+                10000
+           );
+
+           this.camera.position.z = 900;
+
+        }
+
+        private addRoot(){
+
+
+            var z =  (this.config.isFlat() ? 0 : 1000);
+
+            var rootContainerPosition = new THREE.Vector3(1000, 1000, z);
+
+            this.rootObject3D = new THREE.Object3D();
+            this.rootObject3D.position.copy(rootContainerPosition).divideScalar(2).negate();
+
+            this.scene.add(this.rootObject3D);
+        }
+
         private initD3() {
 
-            this.force = (<any> d3.layout).force3d();
+            if(this.config.isFlat()){
+                this.force = d3.layout.force();
+            }
+            else{
+                this.force = (<any> d3.layout).force3d();
+            }
             this.force
                 .charge(-100)
                 .linkDistance(60)
@@ -193,7 +203,7 @@ module GravityGraph {
                 .on('tick', ()=> {
                     this.d3Tick();
                 })
-            ;
+                ;
 
 
             // TESTS   --------------------------------------------------------------------------
@@ -210,7 +220,7 @@ module GravityGraph {
 
                     var position = [];
                     graph.nodes.forEach((node)=> {
-                        var n = new Node3D(node);
+                        var n = new Node3D(node, this.config);
                         this.nodes.push(n);
                         this.rootObject3D.add(n);
                         position.push(n.position);
@@ -260,9 +270,7 @@ module GravityGraph {
 
         private update():void {
             this.controls.update();
-
             this.animateClouds();
-
         }
 
         private updateClouds(){
@@ -336,7 +344,7 @@ module GravityGraph {
 
         // UTILS
 
-        private addDefaultLights():void {
+        private addLights():void {
             var x, y, z;
 
             x = 3000;
@@ -346,10 +354,10 @@ module GravityGraph {
             this.addLight(x, y, z );
 
             x = -x;
-            this.addLight(x, y, z ,true);
+            this.addLight(x, y, z , (this.config.quality == EQuality.HIGH) );
 
             y = -y;
-            //this.addLight(x, y, z);
+            this.addLight(x, y, z);
 
             x = -x;
             //this.addLight(x, y, z, false);
@@ -376,7 +384,10 @@ module GravityGraph {
             light.castShadow = shadows;
 
             light.shadowCameraNear = 200;
-            light.shadowCameraFar = this.camera.far;
+            if(!this.config.isFlat()){
+                var camera = <THREE.PerspectiveCamera> this.camera;
+                light.shadowCameraFar = camera.far;
+            }
             light.shadowCameraFov = 50;
 
             light.shadowBias = -0.00022;
@@ -387,6 +398,37 @@ module GravityGraph {
 
             this.lights.push(light);
             this.scene.add(light);
+        }
+
+        public addSphereBackground(): THREE.Mesh {
+
+            var sphereBackgroundWidth = 50;
+            var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
+            var sphereBackgroundMat = new THREE.MeshLambertMaterial({
+                color: 0xd0d0d0,//0x404040,
+                ambient: 0xffffff,
+                side: 1,
+                transparent: this.config.isTransparent(),
+                opacity : this.config.opacity
+            });
+            var sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
+
+            sphereBackground.receiveShadow = true;
+            sphereBackground.scale.set(50, 50, 50);
+
+            this.scene.add(sphereBackground);
+            return sphereBackground;
+        }
+
+        private addControls(){
+            this.controls = new THREE.OrbitControls(this.camera, this.canvas);
+            this.controls.rotateSpeed = 1.0;
+            this.controls.zoomSpeed = 1.2;
+            (<any> this.controls).panSpeed = 0.8;
+            this.controls.noZoom = false;
+            this.controls.noPan = this.config.isFlat();
+            ( <any> this.controls).staticMoving = true;
+            ( <any> this.controls).dynamicDampingFactor = 0.3;
         }
 
         private drawAxis():void {
@@ -469,8 +511,12 @@ module GravityGraph {
             var newWidth = this.renderer.domElement.clientWidth;
             var newHeight = this.renderer.domElement.height;
 
-            this.camera.aspect = newWidth/ newHeight;
-            this.camera.updateProjectionMatrix();
+            if(!this.config.isFlat()){
+                var camera = <THREE.PerspectiveCamera> this.camera;
+                camera.aspect = newWidth/ newHeight;
+                camera.updateProjectionMatrix();
+            }
+
 
             this.renderer.setSize( newWidth, newHeight);
         }
@@ -492,6 +538,9 @@ module GravityGraph {
                 if(intersectPlane){
                     intersectPlane.point.sub(this.rootObject3D.position);
                     this.currentlySelectedObject.position.copy(intersectPlane.point);
+                    if(this.config.isFlat()){
+                        this.currentlyIntersectedObject.position.z = 0;
+                    }
                     this.updateClouds();
                 }
                 return;
@@ -608,28 +657,26 @@ module GravityGraph {
         private static nodesColor = d3.scale.category10();
 
         private static geometry:THREE.SphereGeometry = new THREE.SphereGeometry(10, 10, 10);
-        private static defaultMaterial:THREE.MeshLambertMaterial = new THREE.MeshLambertMaterial({
-            color: 0x0000ff,
-            transparent: false,
-            opacity: 0.75,
-            wireframe: false
-        });
 
         private data : INodeData;
 
 
-        private static materialsMap:{ [color : number] : THREE.MeshLambertMaterial } = {};
+        private static materialsMap:{ [color : number] : THREE.Material } = {};
 
-        constructor(data:INodeData) {
+        constructor(data:INodeData, config : GravityGraphTools.Options) {
 
-            /*var material = */
+            /*
+                var material = ?
+                var geometry = ?
+            */
 
             var color = Node3D.nodesColor(data.group);
             var material;
             if (Node3D.materialsMap[color]) {
                 material = Node3D.materialsMap[color];
             }
-            else {
+            else if(config.quality == EQuality.HIGH) {
+
                 material = new THREE.MeshLambertMaterial({
                     color: color,
                     transparent: false,
@@ -637,6 +684,18 @@ module GravityGraph {
                     wireframe: false
                 });
                 Node3D.materialsMap[color] = material;
+
+            }
+            else if(config.quality == EQuality.MEDIUM){
+
+                material = new THREE.MeshBasicMaterial({
+                    color: color,
+                    transparent: false,
+                    opacity: 0.75,
+                    wireframe: false
+                });
+                Node3D.materialsMap[color] = material;
+
             }
 
 

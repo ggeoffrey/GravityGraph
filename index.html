@@ -17,11 +17,16 @@
     <script src="vendors/d3.js"></script>
     <script src="vendors/d3.layout.force3D.js"></script>
 
+    <script src="src/Utils.js"></script>
     <script src="src/GravityGraph.js"></script>
 
     <script>
         var gravityGraph = new GravityGraph.Graph({
-           target : 'dev-canvas'
+            target : 'dev-canvas',
+            opacity: 1,
+            backgroundColor : 0x000000,
+            quality : "hiqh",
+            flat : false
         });
     </script>
 </body>

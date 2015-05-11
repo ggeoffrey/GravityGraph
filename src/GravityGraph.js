@@ -12,12 +12,14 @@ var __extends = this.__extends || function (d, b) {
 /// <reference path='headers/three-orbitcontrols.d.ts' />
 /// <reference path='headers/three-projector.d.ts' />
 /// <reference path='headers/d3.d.ts' />
+/// <reference path='Utils.ts' />
 var GravityGraph;
 (function (GravityGraph) {
+    var U = new GravityGraphTools.Utils();
     var Graph = (function () {
         function Graph(config) {
             this.nbTick = 0;
-            this.config = config;
+            this.config = new GravityGraphTools.Options(config);
             console.info("GG : Init");
             this.init3D();
             this.paused = false;
@@ -70,50 +72,54 @@ var GravityGraph;
                 y: 0
             };
             this.lights = new Array();
-            var transparentRenderer = (this.config.opacity && this.config.opacity < 0);
+            var transparentRenderer = this.config.isTransparent();
             this.renderer = new THREE.WebGLRenderer({
                 canvas: this.canvas,
                 antialias: true,
                 alpha: transparentRenderer,
                 devicePixelRatio: window.devicePixelRatio
             });
+            if (!transparentRenderer) {
+                this.config.opacity = 1;
+            }
             this.renderer.shadowMapEnabled = true;
             this.renderer.shadowMapType = THREE.PCFShadowMap;
             this.renderer.sortObjects = false;
-            this.renderer.setClearColor(this.config.backgroundColor || 0x202020, this.config.opacity || 0);
+            this.renderer.setClearColor(this.config.backgroundColor, this.config.opacity);
             this.renderer.setSize(this.canvas.width, this.canvas.height);
+            this.scene = new THREE.Scene();
+            if (this.config.quality == EQuality.HIGH) {
+                this.sphereBackground = this.addSphereBackground();
+            }
+            this.addCamera();
+            this.addLights();
+            this.addControls();
+            this.addRoot();
+        };
+        Graph.prototype.addCamera = function () {
             this.camera = new THREE.PerspectiveCamera(70, this.canvas.offsetWidth / this.canvas.offsetHeight, 1, 10000);
             this.camera.position.z = 900;
-            var sphereBackgroundWidth = 50;
-            var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
-            var sphereBackgroundMat = new THREE.MeshLambertMaterial({
-                color: 0xd0d0d0,
-                ambient: 0xffffff,
-                side: 1
-            });
-            this.sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
-            this.sphereBackground.receiveShadow = true;
-            this.sphereBackground.scale.set(50, 50, 50);
-            this.scene = new THREE.Scene();
-            this.scene.add(this.sphereBackground);
-            this.addDefaultLights();
-            this.controls = new THREE.OrbitControls(this.camera, this.canvas);
-            this.controls.rotateSpeed = 1.0;
-            this.controls.zoomSpeed = 1.2;
-            this.controls.panSpeed = 0.8;
-            this.controls.noZoom = false;
-            this.controls.noPan = false;
-            this.controls.staticMoving = true;
-            this.controls.dynamicDampingFactor = 0.3;
+        };
+        Graph.prototype.addRoot = function () {
+            var z = (this.config.isFlat() ? 0 : 1000);
+            var rootContainerPosition = new THREE.Vector3(1000, 1000, z);
             this.rootObject3D = new THREE.Object3D();
-            var rootContainerPosition = new THREE.Vector3(1000, 1000, 1000);
             this.rootObject3D.position.copy(rootContainerPosition).divideScalar(2).negate();
             this.scene.add(this.rootObject3D);
         };
         Graph.prototype.initD3 = function () {
             var _this = this;
-            this.force = d3.layout.force3d();
-            this.force.charge(-100).linkDistance(60).size([1000, 1000]).on('tick', function () {
+            if (this.config.isFlat()) {
+                this.force = d3.layout.force();
+            }
+            else {
+                this.force = d3.layout.force3d();
+            }
+            this.force
+                .charge(-100)
+                .linkDistance(60)
+                .size([1000, 1000])
+                .on('tick', function () {
                 _this.d3Tick();
             });
             // TESTS   --------------------------------------------------------------------------
@@ -127,7 +133,7 @@ var GravityGraph;
                 else {
                     var position = [];
                     graph.nodes.forEach(function (node) {
-                        var n = new Node3D(node);
+                        var n = new Node3D(node, _this.config);
                         _this.nodes.push(n);
                         _this.rootObject3D.add(n);
                         position.push(n.position);
@@ -142,7 +148,10 @@ var GravityGraph;
                         _this.clouds.push(cloud);
                         _this.rootObject3D.add(cloud);
                     });
-                    _this.force.nodes(position).links(graph.links).start();
+                    _this.force
+                        .nodes(position)
+                        .links(graph.links)
+                        .start();
                 }
             });
         };
@@ -223,16 +232,16 @@ var GravityGraph;
          }
          */
         // UTILS
-        Graph.prototype.addDefaultLights = function () {
+        Graph.prototype.addLights = function () {
             var x, y, z;
             x = 3000;
             y = 3000;
             z = 3000;
             this.addLight(x, y, z);
             x = -x;
-            this.addLight(x, y, z, true);
+            this.addLight(x, y, z, (this.config.quality == EQuality.HIGH));
             y = -y;
-            //this.addLight(x, y, z);
+            this.addLight(x, y, z);
             x = -x;
             //this.addLight(x, y, z, false);
             /*
@@ -253,7 +262,10 @@ var GravityGraph;
             light.position.set(x, y, z);
             light.castShadow = shadows;
             light.shadowCameraNear = 200;
-            light.shadowCameraFar = this.camera.far;
+            if (!this.config.isFlat()) {
+                var camera = this.camera;
+                light.shadowCameraFar = camera.far;
+            }
             light.shadowCameraFov = 50;
             light.shadowBias = -0.00022;
             light.shadowDarkness = 0.5;
@@ -261,6 +273,32 @@ var GravityGraph;
             light.shadowMapHeight = 2048;
             this.lights.push(light);
             this.scene.add(light);
+        };
+        Graph.prototype.addSphereBackground = function () {
+            var sphereBackgroundWidth = 50;
+            var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
+            var sphereBackgroundMat = new THREE.MeshLambertMaterial({
+                color: 0xd0d0d0,
+                ambient: 0xffffff,
+                side: 1,
+                transparent: this.config.isTransparent(),
+                opacity: this.config.opacity
+            });
+            var sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
+            sphereBackground.receiveShadow = true;
+            sphereBackground.scale.set(50, 50, 50);
+            this.scene.add(sphereBackground);
+            return sphereBackground;
+        };
+        Graph.prototype.addControls = function () {
+            this.controls = new THREE.OrbitControls(this.camera, this.canvas);
+            this.controls.rotateSpeed = 1.0;
+            this.controls.zoomSpeed = 1.2;
+            this.controls.panSpeed = 0.8;
+            this.controls.noZoom = false;
+            this.controls.noPan = this.config.isFlat();
+            this.controls.staticMoving = true;
+            this.controls.dynamicDampingFactor = 0.3;
         };
         Graph.prototype.drawAxis = function () {
             var xMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
@@ -306,8 +344,11 @@ var GravityGraph;
         Graph.prototype.onWindowResize = function (event) {
             var newWidth = this.renderer.domElement.clientWidth;
             var newHeight = this.renderer.domElement.height;
-            this.camera.aspect = newWidth / newHeight;
-            this.camera.updateProjectionMatrix();
+            if (!this.config.isFlat()) {
+                var camera = this.camera;
+                camera.aspect = newWidth / newHeight;
+                camera.updateProjectionMatrix();
+            }
             this.renderer.setSize(newWidth, newHeight);
         };
         Graph.prototype.onDocumentMouseMove = function (event) {
@@ -320,6 +361,9 @@ var GravityGraph;
                 if (intersectPlane) {
                     intersectPlane.point.sub(this.rootObject3D.position);
                     this.currentlySelectedObject.position.copy(intersectPlane.point);
+                    if (this.config.isFlat()) {
+                        this.currentlyIntersectedObject.position.z = 0;
+                    }
                     this.updateClouds();
                 }
                 return;
@@ -371,7 +415,10 @@ var GravityGraph;
             this.raycaster.set(this.camera.position, vector.sub(this.camera.position).normalize());
             var intersects = this.raycaster.intersectObjects([this.intersectPlane]);
             if (intersects.length > 0) {
-                this.projectionOffset.copy(intersects[0].point).sub(this.intersectPlane.position).add(this.rootObject3D.position);
+                this.projectionOffset
+                    .copy(intersects[0].point)
+                    .sub(this.intersectPlane.position)
+                    .add(this.rootObject3D.position);
                 return intersects[0];
             }
             return null;
@@ -391,15 +438,27 @@ var GravityGraph;
     GravityGraph.Graph = Graph;
     var Node3D = (function (_super) {
         __extends(Node3D, _super);
-        function Node3D(data) {
-            /*var material = */
+        function Node3D(data, config) {
+            /*
+                var material = ?
+                var geometry = ?
+            */
             var color = Node3D.nodesColor(data.group);
             var material;
             if (Node3D.materialsMap[color]) {
                 material = Node3D.materialsMap[color];
             }
-            else {
+            else if (config.quality == EQuality.HIGH) {
                 material = new THREE.MeshLambertMaterial({
+                    color: color,
+                    transparent: false,
+                    opacity: 0.75,
+                    wireframe: false
+                });
+                Node3D.materialsMap[color] = material;
+            }
+            else if (config.quality == EQuality.MEDIUM) {
+                material = new THREE.MeshBasicMaterial({
                     color: color,
                     transparent: false,
                     opacity: 0.75,
@@ -448,12 +507,6 @@ var GravityGraph;
         };
         Node3D.nodesColor = d3.scale.category10();
         Node3D.geometry = new THREE.SphereGeometry(10, 10, 10);
-        Node3D.defaultMaterial = new THREE.MeshLambertMaterial({
-            color: 0x0000ff,
-            transparent: false,
-            opacity: 0.75,
-            wireframe: false
-        });
         Node3D.materialsMap = {};
         return Node3D;
     })(THREE.Mesh);
@@ -475,18 +528,10 @@ var GravityGraph;
         Link3D.prototype.setCloud = function (c) {
             this.cloud = c;
         };
-        Link3D.prototype.getCloud = function () {
-            return this.cloud;
-        };
-        Link3D.prototype.getLineLength = function () {
-            return this.lineLength;
-        };
-        Link3D.prototype.getSource = function () {
-            return this.source;
-        };
-        Link3D.prototype.getTarget = function () {
-            return this.target;
-        };
+        Link3D.prototype.getCloud = function () { return this.cloud; };
+        Link3D.prototype.getLineLength = function () { return this.lineLength; };
+        Link3D.prototype.getSource = function () { return this.source; };
+        Link3D.prototype.getTarget = function () { return this.target; };
         Link3D.prototype.update = function () {
             this.lineLength = this.source.distanceTo(this.target);
             this.geometry.verticesNeedUpdate = true;
