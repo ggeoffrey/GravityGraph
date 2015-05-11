@@ -12,7 +12,7 @@ enum EQuality{
 
 module GravityGraphTools{
 
-    export class Utils{
+    export class Utils {        
 
         public isNumeric(item : any) : boolean {
             return !isNaN(parseFloat(item));

@@ -10,20 +10,43 @@ module.exports = (grunt)->
   vendorsDest = "dist/vendors.js"
 
 
-  clientList = [
-    "src/GravityGraph.ts"
+  clientList = 'src/**/*.ts' 
+  ###
+  [
+    "GravityGraph.ts"
+    "Utils.ts"
+    "worker.ts"    
   ]
+  ###
 
-  clientDest = "dist/GravityGraph.js"
+  clientDest = "dist/"
 
-  clientOptions =
-    module: 'commonjs'
-    target: 'es5'
-    sourceMap: true
-    declaration: true
 
   grunt.initConfig
     pkg: grunt.file.readJSON('package.json')
+
+    typescript:
+      dev:
+        src: clientList
+        dest: clientDest
+        options:
+          basePath : 'src'
+          module: 'commonjs'
+          target: 'es5'
+          sourceMap: true
+          declaration: false
+      watch:
+        src: clientList
+        dest: clientDest
+        options: 
+          basePath : 'src'
+          module: 'commonjs'
+          target: 'es5'
+          sourceMap: true
+          declaration: false
+          watch:
+            atBegin: true
+
 
     uglify:
       options:
@@ -54,11 +77,6 @@ module.exports = (grunt)->
           "dist/*"
         ]
 
-    typescript:
-      client:
-        src: clientList
-        dest: clientDest
-        options: clientOptions
 
 
     typedoc:
@@ -84,7 +102,11 @@ module.exports = (grunt)->
   grunt.registerTask 'doc', ['typedoc']
 
 
-  grunt.registerTask 'dist', ['clean:prebuild', 'typescript:client'] #, 'concat:vendors']
+  grunt.registerTask 'dist', ['clean:prebuild', 'typescript:dev'] #, 'concat:vendors']
+  
+  grunt.registerTask 'ts', ['typescript:dev']
+  grunt.registerTask 'watch', ['typescript:watch']
+  
   grunt.registerTask 'default', ['dist']
 
 
