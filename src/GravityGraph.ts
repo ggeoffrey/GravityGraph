@@ -147,7 +147,7 @@ module GravityGraph {
             this.scene = new THREE.Scene();
 
             if(this.config.quality == EQuality.HIGH){
-               this.sphereBackground = this.addSphereBackground();
+               this.sphereBackground = this.addBackground();
             }
 
             this.addCamera();
@@ -350,36 +350,40 @@ module GravityGraph {
             x = 3000;
             y = 3000;
             z = 3000;
+            
+            if(this.config.quality != EQuality.HIGH){
+                this.scene.add(new THREE.HemisphereLight(0xffffff, 0xffffff));                
+            }
+            else{                
+                this.addLight(x, y, z );
+    
+                x = -x;
+                this.addLight(x, y, z , true );
+    
+                y = -y;
+                this.addLight(x, y, z);
+    
+                x = -x;
+                //this.addLight(x, y, z, false);
+                
+                z = -z;
+                this.addLight(x, y, z, false);
+    
+                y = -y;
+                this.addLight(x, y, z, false);
+    
+                x = -x;
+                this.addLight(x, y, z, false);
+            }
 
-            this.addLight(x, y, z );
 
-            x = -x;
-            this.addLight(x, y, z , (this.config.quality == EQuality.HIGH) );
-
-            y = -y;
-            this.addLight(x, y, z);
-
-            x = -x;
-            //this.addLight(x, y, z, false);
-            /*
-             z = -z;
-             this.addLight(x, y, z, false);
-
-             y = -y;
-             addLight(x, y, z, false, '1 1 -1');
-
-             x = -x;
-             addLight(x, y, z, false, '-1 1 -1');
-             */
-
-            //this.scene.add(new THREE.HemisphereLight(0xffffff, 0xffffff));
 
         }
 
-        private addLight(x:number, y:number, z:number, shadows?:boolean, name?:string) {
+        private addLight(x:number, y:number, z:number, shadows = false) {
 
             var light:THREE.SpotLight = new THREE.SpotLight(0xffffff, 0.6);
-            light.name = name;
+
             light.position.set(x, y, z);
             light.castShadow = shadows;
 
@@ -400,12 +404,13 @@ module GravityGraph {
             this.scene.add(light);
         }
 
-        public addSphereBackground(): THREE.Mesh {
+        public addBackground(): THREE.Mesh {
 
-            var sphereBackgroundWidth = 50;
+
+            var sphereBackgroundWidth = 20;
             var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
-            var sphereBackgroundMat = new THREE.MeshLambertMaterial({
-                color: 0xd0d0d0,//0x404040,
+            var sphereBackgroundMat = new THREE.MeshBasicMaterial({
+                color: 0xa0a0a0,//0x404040,
                 ambient: 0xffffff,
                 side: 1,
                 transparent: this.config.isTransparent(),
@@ -414,7 +419,7 @@ module GravityGraph {
             var sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
 
             sphereBackground.receiveShadow = true;
-            sphereBackground.scale.set(50, 50, 50);
+            sphereBackground.scale.set(200, 200, 200);
 
             this.scene.add(sphereBackground);
             return sphereBackground;
@@ -656,12 +661,12 @@ module GravityGraph {
 
         private static nodesColor = d3.scale.category10();
 
-        private static geometry:THREE.SphereGeometry = new THREE.SphereGeometry(10, 10, 10);
+        private static geometry : THREE.SphereGeometry = new THREE.SphereGeometry(10, 10, 10);
 
         private data : INodeData;
 
-
-        private static materialsMap:{ [color : number] : THREE.Material } = {};
+        private static materialsMap : { [color : number] : THREE.Material } = {};
+        
 
         constructor(data:INodeData, config : GravityGraphTools.Options) {
 
