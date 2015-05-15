@@ -10,11 +10,17 @@ class Node3D extends THREE.Mesh {
         private static basicGeometry : THREE.SphereGeometry = new THREE.SphereGeometry(10, 10, 10);
         private static lowQualityGeometry : THREE.CircleGeometry = new THREE.CircleGeometry(10, 20);
 
-        private data : INodeData;
-
         private static materialsMap : { [color : number] : THREE.Material } = {};
         
-    
+        
+        
+
+
+        private data : INodeData;
+        
+        public selected : boolean;
+        public walked : boolean;
+            
         private quality : EQuality;
 
 
@@ -61,6 +67,10 @@ class Node3D extends THREE.Mesh {
 
             this.data = data;
             this.quality = config.quality;
+            
+            this.selected = false;
+            this.walked = false;
+            
             this.changeDefaults();
         }
 

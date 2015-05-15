@@ -13,6 +13,7 @@
 /// <reference path='Node3D.ts' />
 /// <reference path='Link3D.ts' />
 /// <reference path='Cloud.ts' />
+/// <reference path='NodeSelectAnimation.ts' />
 
 /// <reference path='Utils.ts' />
 
@@ -46,6 +47,10 @@ class GravityGraph {
     private links:Array<Link3D>;
 
     private clouds: Array<Cloud>;
+    
+    
+    private selectedNode : Node3D;
+    private nodeSelectAnimation : NodeSelectAnimation;
 
 
     // D3
@@ -67,6 +72,7 @@ class GravityGraph {
 
         this.config = new Options(config);
         this.events = new Events();
+        
 
         console.info("GG : Init");
         this.init3D();
@@ -137,6 +143,8 @@ class GravityGraph {
         };
 
         this.lights = new Array();
+        
+        
 
 
         var transparentRenderer = this.config.isTransparent();
@@ -168,6 +176,10 @@ class GravityGraph {
 
 
         this.scene = new THREE.Scene();
+
+        this.nodeSelectAnimation = new NodeSelectAnimation();
+        
+        
 
         if(this.config.quality == EQuality.HIGH){
            this.sphereBackground = this.addBackground();
@@ -209,6 +221,7 @@ class GravityGraph {
         this.rootObject3D = new THREE.Object3D();
         this.rootObject3D.position.copy(rootContainerPosition).divideScalar(2).negate();
 
+        this.rootObject3D.add(this.nodeSelectAnimation);
         this.scene.add(this.rootObject3D);
     }
     
@@ -348,8 +361,7 @@ class GravityGraph {
                 this.clouds[i].stop();
             }
             
-            this.clouds[i].animate();
-            
+            this.clouds[i].animate();            
             i++;
         }
         
@@ -364,6 +376,9 @@ class GravityGraph {
             }
         }
         
+        if(this.selectedNode){
+            this.nodeSelectAnimation.update(target);
+        }
         
     }
 
@@ -400,6 +415,11 @@ class GravityGraph {
         // on stabilisation
         if(this.force.alpha() <= 1e-2){
             this.d3IsWorking = false;
+        }
+        
+        // update node selector
+        if(this.selectedNode){
+            this.nodeSelectAnimation.position.copy(this.selectedNode.position);            
         }
         
     }
@@ -680,47 +700,96 @@ class GravityGraph {
         }
     }
 
+    
+    private isAClick : boolean;
+    private dragTimout : number;
+
     private onDocumentMouseDown(event : MouseEvent){
 
-        event.preventDefault();
+        //event.preventDefault();
 
-
-        var target = this.getTargetObject();
-
-        if ( target ) {
-
-            this.controls.enabled = false;
-            this.currentlySelectedObject =  target.object;
-            this.getPlanIntersect();
-
-            this.canvas.style.cursor = 'move';
-
-            this.force.resume();
-
+        if(this.isAClick){
+            this.isAClick = false;
+            clearTimeout(this.dragTimout);
+        }
+        else{
+            var target = this.getTargetObject();
+    
+            if ( target ) {
+                
+                this.currentlySelectedObject =  target.object;
+                
+                this.isAClick = true;
+                this.dragTimout = setTimeout(()=>{
+                    
+                    this.isAClick = false;
+                    
+                    this.controls.enabled = false;
+                    this.getPlanIntersect();
+    
+                    this.canvas.style.cursor = 'move';
+    
+                    this.force.resume();            
+                    
+                }, 150);
+           }            
         }
     }
 
     private onDocumentMouseUp(event : MouseEvent){
-        event.preventDefault();
+        //event.preventDefault();
 
         this.controls.enabled = true;
 
         if ( this.currentlySelectedObject) {
+            
+            if(this.isAClick){
+                clearTimeout(this.dragTimout);
+                this.selectNode(this.currentlyIntersectedObject, event);
+            }
+            else{
+                this.force.resume();
+            }
+            
+            this.currentlySelectedObject = null;
+            
+            
             /*
             this.intersectPlane.position
 
                 .copy( this.currentlyIntersectedObject.position )
                 .add(this.rootObject3D.position);
-            */
-            this.currentlySelectedObject = null;
-
-            this.force.resume();
+            */            
         }
 
         this.canvas.style.cursor = 'auto';
-
-
     }
+    
+    
+    
+    private selectNode( node : Node3D, event? : MouseEvent ) : void {
+        if(event){
+            this.events.emit('nodeSelected', [event, node.getData()]);
+        }
+        
+        if(this.selectedNode){
+            this.unselectNode(this.selectedNode);
+        }
+
+        node.selected = true;
+        this.selectedNode = node;
+        
+        this.nodeSelectAnimation.position.copy(node.position);
+        
+    }
+    
+    private unselectNode( node : Node3D ) : void {
+        node.selected = false;
+        this.selectedNode = null;
+    }
+    
+    
+    
 
     private getPlanIntersect(): any {
 

@@ -35,7 +35,7 @@
             target : 'dev-canvas',
             //opacity: 0,
             //backgroundColor : 0xffffff,
-            quality : "medium",
+            quality : "high",
             flat : false,
             stats : true
         });
@@ -51,8 +51,11 @@
         });
         
         gravityGraph.on('nodeBlur', function (event) {
-           
             tooltip.style.opacity = "0";
+        });
+        
+        gravityGraph.on('nodeSelected', function (event, data) {
+            document.title = data.name;
         });
         
         
