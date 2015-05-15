@@ -18,7 +18,7 @@ class Node3D extends THREE.Mesh {
         private quality : EQuality;
 
 
-        constructor(data:INodeData, config : GravityGraphTools.Options) {
+        constructor(data:INodeData, config : Options) {
 
             /*
                 var material = ?

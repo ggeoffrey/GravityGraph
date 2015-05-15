@@ -15,6 +15,10 @@
     </canvas>
 
 
+    <div id="tooltip">
+        Hello
+    </div>
+
     <script src="vendors/three.js"></script>
     <script src="vendors/OrbitControls.js"></script>
     <script src="vendors/d3.js"></script>
@@ -35,6 +39,23 @@
             flat : false,
             stats : true
         });
+        
+        
+        var tooltip = document.getElementById('tooltip');
+        gravityGraph.on('nodeOvered', function (event, data) {
+            tooltip.style.left = (event.clientX + 20) + "px";
+            tooltip.style.top = (event.clientY - 20) + "px";
+            
+            tooltip.innerText = data.name;
+            tooltip.style.opacity = "1";
+        });
+        
+        gravityGraph.on('nodeBlur', function (event) {
+           
+            tooltip.style.opacity = "0";
+        });
+        
+        
     </script>
 </body>
 </html>

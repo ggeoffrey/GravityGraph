@@ -11,9 +11,19 @@ body{
 }
 
 
-#dev-canvas {
-    /*
-    margin : 2em;
-    box-shadow: 0 0 1em gray;
-    */
+#tooltip {
+    width: 10em;
+    
+    background-color: rgba(255,255,255,0.8);
+    position: absolute;
+    top:0;
+    left:0;
+    z-index: 1;
+    
+    padding: 0.5em;
+    text-align: center;
+    
+    pointer-events: none;
+    opacity: 0;
+    
 }

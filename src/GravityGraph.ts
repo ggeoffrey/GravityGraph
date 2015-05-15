@@ -16,11 +16,13 @@
 
 /// <reference path='Utils.ts' />
 
+/// <reference path='Events.ts' />
+
 declare var Stats;
 
 var U = new Utils();
 
-class Graph {
+class GravityGraph {
 
     private config: Options;
 
@@ -53,10 +55,18 @@ class Graph {
     // Stats
     
     private stats;
+    
+    
+    // User functions
+    
+    private events : Events;
+    
+    
 
     constructor(config:IOptions) {
 
         this.config = new Options(config);
+        this.events = new Events();
 
         console.info("GG : Init");
         this.init3D();
@@ -650,15 +660,21 @@ class Graph {
                 this.intersectPlane.position.add(this.rootObject3D.position);
                 this.intersectPlane.lookAt( this.camera.position );
 
+                this.events.emit('nodeOvered', [event, this.currentlyIntersectedObject.getData()]);
+
             }
 
             this.canvas.style.cursor = 'pointer';
+            
+            
 
         } else {
 
+            if(this.currentlyIntersectedObject){
+                this.events.emit('nodeBlur', [event]);
+            }
 
             this.currentlyIntersectedObject = null;
-
             this.canvas.style.cursor = 'auto';
 
         }
@@ -756,6 +772,18 @@ class Graph {
         this.canvas.parentElement.appendChild(stats.domElement);
         
         this.stats = stats;            
+    }
+    
+    
+    
+    
+    
+    // events
+    
+    
+    
+    public on (name : string, action : Function) : void {
+        this.events.add(name, action);
     }
     
     
