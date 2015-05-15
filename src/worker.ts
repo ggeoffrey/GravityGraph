@@ -6,6 +6,9 @@
 /// <reference path='headers/GravityGraphData.d.ts' />
 
 
+
+/*
+
 importScripts("../vendors/d3.js");
 
 
@@ -106,3 +109,4 @@ class D3Worker{
     new D3Worker(self);
 })(<any>self);
 
+*/
