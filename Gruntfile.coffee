@@ -19,7 +19,7 @@ module.exports = (grunt)->
   ]
   ###
 
-  clientDest = "dist/"
+  clientDest = "dist/GravityGraph.js"
 
 
   grunt.initConfig
