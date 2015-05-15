@@ -1,6 +1,6 @@
 /**
- * Created by Geoffrey on 5/10/2015.
- */
+* Created by Geoffrey on 5/10/2015.
+*/
 
 
 enum EQuality{
@@ -10,84 +10,81 @@ enum EQuality{
 }
 
 
-module GravityGraphTools{
 
-    export class Utils {        
+class Utils {
+    
+    constructor(){}
 
-        public isNumeric(item : any) : boolean {
-            return !isNaN(parseFloat(item));
+    public isNumeric(item : any) : boolean {
+        return !isNaN(parseFloat(item));
+    }
+
+    public parseBoolean(item : any) : boolean {
+        var ret : boolean = !!item;
+        if(item == "true"){
+            ret = true;
         }
-
-        public parseBoolean(item : any) : boolean {
-            var ret : boolean = !!item;
-            if(item == "true"){
-                ret = true;
-            }
-            else if (item == "false"){
-                ret = false;
-            }
-            return ret;
+        else if (item == "false"){
+            ret = false;
         }
+        return ret;
+    }
+}
 
 
+
+class Options{
+
+    private _config : IOptions;
+
+    private U = new Utils();
+
+
+    constructor(config : IOptions){
+        this._config = config;
     }
 
 
+    public get target() {
+        return this._config.target;
+    }
 
-    export class Options{
-
-        private _config : IOptions;
-
-        private U = new Utils();
-
-
-        constructor(config : IOptions){
-            this._config = config;
+    public get quality(){
+        var quality = EQuality.HIGH;
+        switch (this._config.quality){
+            case "high":
+                quality = EQuality.HIGH;
+                break;
+            case "medium":
+                quality = EQuality.MEDIUM;
+                break;
+            case "low":
+                quality = EQuality.LOW;
+                break;
         }
+        return quality;
+    }
 
 
-        public get target() {
-            return this._config.target;
-        }
+    public get opacity(){
+        return parseFloat(<any>this._config.opacity) || 0;
+    }
 
-        public get quality(){
-            var quality = EQuality.HIGH;
-            switch (this._config.quality){
-                case "high":
-                    quality = EQuality.HIGH;
-                    break;
-                case "medium":
-                    quality = EQuality.MEDIUM;
-                    break;
-                case "low":
-                    quality = EQuality.LOW;
-                    break;
-            }
-            return quality;
-        }
+    public get backgroundColor(){
+        return this._config.backgroundColor || 0x202020;
+    }
 
+    public isTransparent() : boolean {
 
-        public get opacity(){
-            return parseFloat(<any>this._config.opacity) || 0;
-        }
+        return( this.U.isNumeric(this._config.opacity) && this._config.opacity >= 0 && this._config.opacity < 1);
+    }
 
-        public get backgroundColor(){
-            return this._config.backgroundColor || 0x202020;
-        }
-
-        public isTransparent() : boolean {
-
-            return( this.U.isNumeric(this._config.opacity) && this._config.opacity >= 0 && this._config.opacity < 1);
-        }
-
-        public isFlat() : boolean {
-            return this.U.parseBoolean(this._config.flat);
-        }
-        
-        
-        public get stats() : boolean{
-            return this.U.parseBoolean(this._config.stats)
-        }
-
+    public isFlat() : boolean {
+        return this.U.parseBoolean(this._config.flat);
+    }
+    
+    
+    public get stats() : boolean{
+        return this.U.parseBoolean(this._config.stats)
     }
 }
