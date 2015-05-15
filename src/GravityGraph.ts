@@ -10,8 +10,13 @@
 
 /// <reference path='headers/d3.d.ts' />
 
+/// <reference path='Node3D.ts' />
+/// <reference path='Link3D.ts' />
+/// <reference path='Cloud.ts' />
+
 /// <reference path='Utils.ts' />
 
+declare var Stats;
 
 module GravityGraph {
 
@@ -46,6 +51,11 @@ module GravityGraph {
 
         // D3
         private force:D3.Layout.ForceLayout;
+        
+        
+        // Stats
+        
+        private stats;
 
         constructor(config:IOptions) {
 
@@ -61,6 +71,10 @@ module GravityGraph {
             //this.drawAxis();
 
             this.initD3();
+            
+            //if(this.config.stats){
+            this.addStats();
+            //}
             
             this.stretchToParent();
 
@@ -279,6 +293,12 @@ module GravityGraph {
         }
 
         private run():void {
+            
+            if(this.stats){
+                this.stats.begin();
+            }
+            
+                
             if (!this.paused) {
                 this.update();
                 this.render();
@@ -286,6 +306,11 @@ module GravityGraph {
                     this.run();
                 });
             }
+            
+            if(this.stats){
+                this.stats.end();
+            }
+            
         }
 
         public pause():void {
@@ -299,11 +324,12 @@ module GravityGraph {
 
         private update():void {
             this.controls.update();
-            this.updateClouds();
-            
+            this.updateElements();            
         }
 
-        private updateClouds(){
+        private updateElements(){
+            
+            // clouds
             var i = 0, len = this.clouds.length;
             while (i < len) {
                 //debugger;
@@ -319,6 +345,19 @@ module GravityGraph {
                 
                 i++;
             }
+            
+            // nodes
+            i = 0, len = this.nodes.length;
+            var target = this.camera.position.clone().sub(this.rootObject3D.position);
+            
+            if(this.config.quality == EQuality.LOW){
+                while(i<len){
+                    this.nodes[i].lookAt(target);
+                    i++;
+                }
+            }
+            
+            
         }
 
         
@@ -433,10 +472,10 @@ module GravityGraph {
             light.castShadow = shadows;
 
             light.shadowCameraNear = 200;
-            if(!this.config.isFlat()){
+            //if(!this.config.isFlat()){
                 var camera = <THREE.PerspectiveCamera> this.camera;
                 light.shadowCameraFar = camera.far;
-            }
+            //}
             light.shadowCameraFov = 50;
 
             light.shadowBias = -0.00022;
@@ -454,7 +493,7 @@ module GravityGraph {
 
             var sphereBackgroundWidth = 20;
             var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
-            var sphereBackgroundMat = new THREE.MeshBasicMaterial({
+            var sphereBackgroundMat = new THREE.MeshLambertMaterial({
                 color: 0xa0a0a0,//0x404040,
                 ambient: 0xffffff,
                 side: 1,
@@ -596,7 +635,7 @@ module GravityGraph {
                     if(this.config.isFlat()){
                         this.currentlyIntersectedObject.position.z = 0;
                     }
-                    this.updateClouds();
+                    this.updateElements();
                 }
                 return;
             }
@@ -704,271 +743,29 @@ module GravityGraph {
             }
             return null;
         }
-    }
-
-
-    class Node3D extends THREE.Mesh {
-
-        private static nodesColor = d3.scale.category10();
-
-        private static geometry : THREE.SphereGeometry = new THREE.SphereGeometry(10, 10, 10);
-
-        private data : INodeData;
-
-        private static materialsMap : { [color : number] : THREE.Material } = {};
-        
-
-        constructor(data:INodeData, config : GravityGraphTools.Options) {
-
-            /*
-                var material = ?
-                var geometry = ?
-            */
-
-            var color = Node3D.nodesColor(data.group);
-            var material;
-            if (Node3D.materialsMap[color]) {
-                material = Node3D.materialsMap[color];
-            }
-            else if(config.quality == EQuality.HIGH) {
-
-                material = new THREE.MeshLambertMaterial({
-                    color: color,
-                    transparent: false,
-                    opacity: 0.75,
-                    wireframe: false
-                });
-                Node3D.materialsMap[color] = material;
-
-            }
-            else if(config.quality == EQuality.MEDIUM){
-
-                material = new THREE.MeshBasicMaterial({
-                    color: color,
-                    transparent: false,
-                    opacity: 0.75,
-                    wireframe: false
-                });
-                Node3D.materialsMap[color] = material;
-
-            }
-
-
-            super(Node3D.geometry, material);
-
-            this.data = data;
-            this.changeDefaults();
-        }
-
-        private changeDefaults() {
-
-            this.castShadow = true;
-            //this.receiveShadow = true;
-
-            //this.scale.x = 5;
-            //this.scale.y = 5;
-            //this.scale.z = 5;
-
-            //this.update();
-
-        }
-
-        // COLOR
-        public static setColorMethod(colorScale:D3.Scale.OrdinalScale) {
-            Node3D.nodesColor = colorScale;
-        }
-
-        public getColor():THREE.Color {
-            var material = <THREE.MeshLambertMaterial> this.material;
-            return material.color;
-        }
-
-        public setColor(color:number):void {
-            //if(color <= 0xffffff && color >= 0x000000){
-            var material = <THREE.MeshLambertMaterial> this.material;
-            material.color.set(color);
-            //}
-        }
-
-
-
-        // DATA
-
-        public getData():INodeData {
-            return this.data;
-        }
-
-        // REFRESH
-        public update() {
-            this.setColor(Node3D.nodesColor(this.data.group));
-            this.material.needsUpdate = true;
-        }
-
-
-        // UTILS
-
-        public distanceTo(node : Node3D) : number {
-            return this.position.distanceTo(node.position);
-        }
-
-    }
-
-    class Link3D extends THREE.Line {
-
-        private static defaultMaterial:THREE.LineBasicMaterial = new THREE.LineBasicMaterial({
-            color : 0x909090
-        });
-
-
-        private source : Node3D;
-        private target : Node3D;
-
-        private cloud : Cloud;
-
-        private lineLength: number;
-
-        constructor(source:Node3D, target:Node3D) {
-
-            this.source = source;
-            this.target = target;
-
-            var geometry = new THREE.Geometry();
-            geometry.vertices.push(source.position);
-            geometry.vertices.push(target.position);
-
-            super(geometry, Link3D.defaultMaterial);
-
-
-            this.changeDefaults();
-        }
-
-        private changeDefaults() {
-            this.castShadow = true;
-            this.position = this.source.position;
-        }
-
-        public setCloud(c : Cloud){
-            this.cloud = c;
-        }
-
-        public getCloud(){  return this.cloud; }
-
-        public getLineLength(){return this.lineLength; }
-
-        public getSource(){ return this.source; }
-        public getTarget(){ return this.target; }
-
-
-        public update(){
-            this.lineLength = this.source.distanceTo(this.target);
-            this.geometry.verticesNeedUpdate = true;
-            this.getCloud().update();
-        }
-
-
-
-
-
-    }
-
-    class Cloud extends THREE.PointCloud{
-
-
-        private static  imgMap : string = 'assets/img/light.png';
         
         
-        private static particleMap = THREE.ImageUtils.loadTexture(Cloud.imgMap);
-
-        private static defaultMaterial = new THREE.PointCloudMaterial({
-            color: 0xffffff, // blue
-            size: 10,
-            map: Cloud.particleMap,
-            blending: THREE.AdditiveBlending,
-            transparent: true,
-            depthWrite: false,
-            //vertexColors: true,
-            sizeAttenuation: true
-        });
         
-        private static baseVelocity = 0.25;
-
-
-        private support : Link3D;
-
-        private velocity : number;
-
-        private nbParticles: number;
-
-        constructor(link : Link3D){
-
-            this.support = link;
-            this.velocity = 0;
-
-            this.nbParticles = 10;
-
-            var geometry = new THREE.Geometry();
-
-            for(var i = 0 ; i < this.nbParticles; i++){
-                geometry.vertices.push(new THREE.Vector3(0, 0, 0 /*+ i * 5*/));
-            }
-            super(geometry, Cloud.defaultMaterial);
+        
+        private addStats(){
+            var stats = new Stats();
             
-           
-
-            this.support.setCloud(this);
+            stats.setMode(0);
+            
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.left = this.canvas.offsetLeft + "px";
+            stats.domElement.style.top = this.canvas.offsetTop + "px";
+            
+            this.canvas.parentElement.appendChild(stats.domElement);
+            
+            this.stats = stats;            
         }
         
-
-        private changeDefaults(){
-
-        }
-
-        public update(){
-            this.position.copy(this.support.geometry.vertices[0]);
-            this.lookAt(this.support.geometry.vertices[1]);
-        }
-
-
-        public start() : void {
-            if(this.velocity < Cloud.baseVelocity){
-                this.velocity += 0.005;
-            }
-        }
-
-        public stop() : void {
-            if(this.velocity > 0){
-                this.velocity -= 0.0035;            
-            }
-        }
-
-        public animate(){
-            
-            if(this.velocity > 0){
-                
-                var i = 0, len = this.geometry.vertices.length, vertice, previousVertice;
-    
-                var lineLength = this.support.getLineLength();
-    
-                while(i<len){
-                    vertice = this.geometry.vertices[i]
-                    vertice.z += this.velocity;
-                    if(vertice.z > lineLength){
-                        vertice.z = 0;
-                    }
-                    if(previousVertice){
-                        if(vertice.z-previousVertice.z < lineLength / this.nbParticles ) {
-                            vertice.z+= this.velocity;
-                        }
-                    }
-                    previousVertice = vertice;
-    
-                    i++;
-                }
-    
-                this.geometry.verticesNeedUpdate = true;
-                
-            }
-        }
+        
+        
     }
+
+
+    
 
 }

@@ -83,6 +83,11 @@ module GravityGraphTools{
         public isFlat() : boolean {
             return this.U.parseBoolean(this._config.flat);
         }
+        
+        
+        public get stats() : boolean{
+            return this.U.parseBoolean(this._config.stats)
+        }
 
     }
 }

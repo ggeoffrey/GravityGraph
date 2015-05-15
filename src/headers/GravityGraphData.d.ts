@@ -3,7 +3,6 @@
 /// <reference path='three-orbitcontrols.d.ts' />
 /// <reference path='three-projector.d.ts' />
 
-
 interface IWorker extends Worker{
     postMessage(message : IWorkerMessaqe, rest? : any) : void;
 }
@@ -25,6 +24,7 @@ interface IOptions{
     links?: Array<ILinkData>;
     quality? : string;
     flat? : boolean;
+    stats? : boolean;
 }
 
 
