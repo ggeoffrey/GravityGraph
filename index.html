@@ -7,10 +7,13 @@
 </head>
 <body>
 
+
+
     <canvas id="dev-canvas" width="1300" height="600">
         Sadly, your browser doesn't support this technology. <br/>
         Please update your browser.
     </canvas>
+
 
     <script src="vendors/three.js"></script>
     <script src="vendors/OrbitControls.js"></script>
@@ -23,10 +26,10 @@
     <script>
         var gravityGraph = new GravityGraph.Graph({
             target : 'dev-canvas',
-            //opacity: 1,
-            //backgroundColor : 0x000000,
-            quality : "high",
-            flat : false
+            //opacity: 0,
+            //backgroundColor : 0xffffff,
+            quality : "medium",
+            flat : true
         });
     </script>
 </body>
