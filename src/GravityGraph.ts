@@ -74,7 +74,23 @@ class GravityGraph {
             this.addStats();
         }
         
+        // bind events
         
+        
+        this.vis3D.on("nodeOvered", (...args)=>{
+            this.events.emit("nodeOvered", args);
+        });
+        
+        this.vis3D.on("nodeBlur", (...args)=>{
+            this.events.emit("nodeBlur", args);
+        });
+        
+        this.vis3D.on("nodeSelected", (...args)=>{
+            this.events.emit("nodeSelected", args);
+        });
+        
+        
+        // ----------------
         
 
         this.run();

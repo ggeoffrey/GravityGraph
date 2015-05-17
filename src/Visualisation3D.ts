@@ -700,7 +700,9 @@ class Visualisation3D {
     }
     
     
-    
+    public on (name : string, action : Function) : void {
+        this.events.add(name, action);
+    }
     
     
     
