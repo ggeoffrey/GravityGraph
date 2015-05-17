@@ -53,7 +53,9 @@ class Link3D extends THREE.Line {
     public update(){
         this.lineLength = this.source.distanceTo(this.target);
         this.geometry.verticesNeedUpdate = true;
-        this.getCloud().update();
+        if(this.cloud){
+            this.cloud.update();
+        }
     }
 
 }

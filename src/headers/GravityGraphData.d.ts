@@ -24,6 +24,7 @@ interface IOptions{
     links?: Array<ILinkData>;
     quality? : string;
     flat? : boolean;
+    flow? : boolean;
     stats? : boolean;
 }
 

@@ -290,9 +290,11 @@ class GravityGraph {
                     this.links.push(link3D);
                     this.rootObject3D.add(link3D);
 
-                    var cloud = new Cloud(link3D);
-                    this.clouds.push(cloud);
-                    this.rootObject3D.add(cloud);
+                    if(this.config.flow){
+                        var cloud = new Cloud(link3D);
+                        this.clouds.push(cloud);
+                        this.rootObject3D.add(cloud);
+                    }
 
 
                 });

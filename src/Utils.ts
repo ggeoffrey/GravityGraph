@@ -84,6 +84,11 @@ class Options{
     }
     
     
+    public get flow(){
+        return this.U.parseBoolean(this._config.flow);
+    }
+    
+    
     public get stats() : boolean{
         return this.U.parseBoolean(this._config.stats)
     }
