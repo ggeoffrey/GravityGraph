@@ -75,7 +75,7 @@ class Node3D extends THREE.Mesh {
         }
 
         private changeDefaults() {
-
+            this.position.set(0,0,0);
             this.castShadow = true;
         }
 
