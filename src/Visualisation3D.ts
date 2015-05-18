@@ -696,6 +696,8 @@ class Visualisation3D {
                 
         this.d3Instance.setNodes(position);
         
+        return this.nodes;
+        
     }
     
     
@@ -713,7 +715,7 @@ class Visualisation3D {
                 var source = this.nodes[link.source];
                 var target = this.nodes[link.target];
     
-                var link3D = new Link3D(source, target);
+                var link3D = new Link3D(source, target, link);
                 this.links.push(link3D);
                 this.rootObject3D.add(link3D);
     
@@ -725,6 +727,9 @@ class Visualisation3D {
             });
             
             this.d3Instance.setLinks(links);
+            
+            
+            return this.links;
         }
     }
     
@@ -736,50 +741,12 @@ class Visualisation3D {
     
     
     
+    //  GETTERS / SETTERS
     
-    //  --  Advenced methodes  --
     
-    
-    private focusOn(nodes : Array<Node3D>){
-        nodes.forEach((n1)=>{
-          this.nodes.forEach((n2)=>{
-                if(n2.equals(n1)){
-                    n2.setFocused();
-                }  
-                else{
-                    n2.setUnFocused();
-                }
-          });
-        });
-    }
-    private resetFocus(){
-        this.nodes.forEach((node) => {
-            node.setFocused();
-        });
-    }
-    
-    public focusOnRelation(){
-        if(this.selectedNode){
-            this.focusOn([this.selectedNode]);
-        }
-    }
-    
-    public focusOnGroup(){
-        var nodes : Array<Node3D>;
-        
-        if(this.selectedNode){
-           this.nodes.forEach((node) => {
-               if(node.isSameGroupOf(this.selectedNode)){
-                   node.setFocused();
-               }
-               else{
-                   node.setUnFocused();                   
-               }
-           });
-        }
-        
-    }
-    
+    public getSelectedNode() : Node3D {
+        return this.selectedNode;
+    }   
     
     
 

@@ -47,7 +47,7 @@ class GravityGraph {
     // Data
     
     private nodes : Array<Node3D>;
-    private links : Array<Node3D>;
+    private links : Array<Link3D>;
     
     
     
@@ -156,8 +156,9 @@ class GravityGraph {
                 console.error(error);
             }
             else {
-                this.vis3D.setNodes(graph.nodes);
-                this.vis3D.setLinks(graph.links);
+                this.nodes = this.vis3D.setNodes(graph.nodes);
+                this.links = this.vis3D.setLinks(graph.links);
+                               
                 this.vis3D.start();
             }
         });
@@ -262,6 +263,111 @@ class GravityGraph {
         this.events.add(name, action);
     }
     
+    
+    
+    
+    
+    //  --  Advenced methods  --
+    
+
+    private resetFocus(){
+        this.nodes.forEach((node) => {
+            node.setFocused();
+        });
+    }
+    
+    public focusOnRelations(){
+        if(this.vis3D.getSelectedNode()){
+            var relations = this.getRelationsOf(this.vis3D.getSelectedNode());
+            
+            console.log(relations);
+            this.nodes.forEach((node)=>{
+               if(relations.indexOf(node) != -1){
+                   node.setFocused();
+               }
+               else{
+                   node.setUnFocused();
+               }
+            });
+        }
+    }
+    
+    public focusOnGroup(){
+        var nodes : Array<Node3D>;
+        
+        if(this.vis3D.getSelectedNode()){
+           this.nodes.forEach((node) => {
+               if(node.isSameGroupOf(this.vis3D.getSelectedNode())){
+                   node.setFocused();
+               }
+               else{
+                   node.setUnFocused();
+               }
+           });
+        }
+        
+    }
+    
+    
+    
+    // SEARCH / SORT
+    
+    private getRelationsOf(node:Node3D){
+        var name = this.getNameOrIndexOf(node);
+        
+        
+        var relations : Array<Node3D> = [];
+        if(name !== undefined ){
+            this.links.forEach((link) => {
+                
+                
+                var match = false;
+                
+                if(link.getData().source == name || link.getData().target == name){
+                    match = true;
+                }
+                
+                
+                if(match){
+                    var node = this.nodes[link.getData().source];
+                        relations.push(node);
+                    /*if(relations.indexOf(node) == -1 && node){
+                    }*/
+                    node = this.nodes[link.getData().target];
+                        relations.push(node);
+                    /*if(relations.indexOf(node) == -1 && node){
+                    }*/
+                }             
+                
+            });
+        }
+        
+        return relations || [];        
+    }
+    
+    private getNameOrIndexOf(node:Node3D){
+        
+        var name;
+        
+        for (var i = 0; i < this.links.length; i++) {
+            var link = this.links[i];
+            
+            var source = link.getData().source;
+            var target = link.getData().target;
+            
+            if(this.nodes[source] && this.nodes[source].equals(node)){
+                name = source;
+                break;   
+            }
+            else if(this.nodes[target] && this.nodes[target].equals(node)){
+                name = target;
+                break;
+            }
+        }
+        
+        return name;
+        
+    }
     
     
 }

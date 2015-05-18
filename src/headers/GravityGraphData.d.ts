@@ -34,10 +34,13 @@ interface INodeData{
     x? : number;
     y? : number;
     z?: number;
-    group?:any;
+    group?:any;  
 }
 
-interface ILinkData{}
+interface ILinkData{
+    source : any;
+    target : any;
+}
 
 
 interface IMouse{

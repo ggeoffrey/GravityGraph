@@ -11,13 +11,22 @@
 
     <canvas id="dev-canvas" width="1300" height="600">
         Sadly, your browser doesn't support this technology. <br/>
-        Please update your browser.
+        Please update your browser or your drivers.
     </canvas>
 
-
-    <div id="tooltip">
-        Hello
+    <div id="toolbar">
+        <button onclick="gravityGraph.resetFocus()">
+            Reset
+        </button>
+        <button onclick="gravityGraph.focusOnRelations()">
+            Show relations
+        </button>
+        <button onclick="gravityGraph.focusOnGroup()">
+            Show group
+        </button>
     </div>
+
+    <div id="tooltip"></div>
 
     <script src="vendors/three.js"></script>
     <script src="vendors/Detector.js"></script>
@@ -43,7 +52,7 @@
             target : 'dev-canvas',
             //opacity: 0,
             //backgroundColor : 0xffffff,
-            quality : "low",
+            quality : "high",
             flat : true,
             flow : false,
             stats : true

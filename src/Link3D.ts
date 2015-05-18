@@ -13,12 +13,19 @@ class Link3D extends THREE.Line {
 
     private source : Node3D;
     private target : Node3D;
+    
+    private data : ILinkData;
 
     private cloud : Cloud;
 
     private lineLength: number;
 
-    constructor(source:Node3D, target:Node3D) {
+    constructor(source:Node3D, target:Node3D, data: ILinkData) {
+
+        this.data = {
+            source : data.source,
+            target : data.target
+        };
 
         this.source = source;
         this.target = target;
@@ -36,6 +43,11 @@ class Link3D extends THREE.Line {
     private changeDefaults() {
         this.castShadow = true;
         this.position = this.source.position;
+    }
+    
+    
+    public getData(){
+        return this.data;
     }
 
     public setCloud(c : Cloud){

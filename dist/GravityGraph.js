@@ -375,7 +375,11 @@ var Node3D = (function (_super) {
 /// <reference path='headers/three.d.ts' />
 var Link3D = (function (_super) {
     __extends(Link3D, _super);
-    function Link3D(source, target) {
+    function Link3D(source, target, data) {
+        this.data = {
+            source: data.source,
+            target: data.target
+        };
         this.source = source;
         this.target = target;
         var geometry = new THREE.Geometry();
@@ -387,6 +391,9 @@ var Link3D = (function (_super) {
     Link3D.prototype.changeDefaults = function () {
         this.castShadow = true;
         this.position = this.source.position;
+    };
+    Link3D.prototype.getData = function () {
+        return this.data;
     };
     Link3D.prototype.setCloud = function (c) {
         this.cloud = c;
@@ -854,6 +861,7 @@ var Visualisation3D = (function () {
             position.push(n.position);
         });
         this.d3Instance.setNodes(position);
+        return this.nodes;
     };
     Visualisation3D.prototype.setLinks = function (links) {
         var _this = this;
@@ -865,7 +873,7 @@ var Visualisation3D = (function () {
             links.forEach(function (link) {
                 var source = _this.nodes[link.source];
                 var target = _this.nodes[link.target];
-                var link3D = new Link3D(source, target);
+                var link3D = new Link3D(source, target, link);
                 _this.links.push(link3D);
                 _this.rootObject3D.add(link3D);
                 if (_this.config.flow && _this.config.isWebGL()) {
@@ -875,48 +883,15 @@ var Visualisation3D = (function () {
                 }
             });
             this.d3Instance.setLinks(links);
+            return this.links;
         }
     };
     Visualisation3D.prototype.on = function (name, action) {
         this.events.add(name, action);
     };
-    //  --  Advenced methodes  --
-    Visualisation3D.prototype.focusOn = function (nodes) {
-        var _this = this;
-        nodes.forEach(function (n1) {
-            _this.nodes.forEach(function (n2) {
-                if (n2.equals(n1)) {
-                    n2.setFocused();
-                }
-                else {
-                    n2.setUnFocused();
-                }
-            });
-        });
-    };
-    Visualisation3D.prototype.resetFocus = function () {
-        this.nodes.forEach(function (node) {
-            node.setFocused();
-        });
-    };
-    Visualisation3D.prototype.focusOnRelation = function () {
-        if (this.selectedNode) {
-            this.focusOn([this.selectedNode]);
-        }
-    };
-    Visualisation3D.prototype.focusOnGroup = function () {
-        var _this = this;
-        var nodes;
-        if (this.selectedNode) {
-            this.nodes.forEach(function (node) {
-                if (node.isSameGroupOf(_this.selectedNode)) {
-                    node.setFocused();
-                }
-                else {
-                    node.setUnFocused();
-                }
-            });
-        }
+    //  GETTERS / SETTERS
+    Visualisation3D.prototype.getSelectedNode = function () {
+        return this.selectedNode;
     };
     return Visualisation3D;
 })();
@@ -1016,8 +991,8 @@ var GravityGraph = (function () {
                 console.error(error);
             }
             else {
-                _this.vis3D.setNodes(graph.nodes);
-                _this.vis3D.setLinks(graph.links);
+                _this.nodes = _this.vis3D.setNodes(graph.nodes);
+                _this.links = _this.vis3D.setLinks(graph.links);
                 _this.vis3D.start();
             }
         });
@@ -1084,6 +1059,80 @@ var GravityGraph = (function () {
     // events
     GravityGraph.prototype.on = function (name, action) {
         this.events.add(name, action);
+    };
+    //  --  Advenced methods  --
+    GravityGraph.prototype.resetFocus = function () {
+        this.nodes.forEach(function (node) {
+            node.setFocused();
+        });
+    };
+    GravityGraph.prototype.focusOnRelations = function () {
+        if (this.vis3D.getSelectedNode()) {
+            var relations = this.getRelationsOf(this.vis3D.getSelectedNode());
+            console.log(relations);
+            this.nodes.forEach(function (node) {
+                if (relations.indexOf(node) != -1) {
+                    node.setFocused();
+                }
+                else {
+                    node.setUnFocused();
+                }
+            });
+        }
+    };
+    GravityGraph.prototype.focusOnGroup = function () {
+        var _this = this;
+        var nodes;
+        if (this.vis3D.getSelectedNode()) {
+            this.nodes.forEach(function (node) {
+                if (node.isSameGroupOf(_this.vis3D.getSelectedNode())) {
+                    node.setFocused();
+                }
+                else {
+                    node.setUnFocused();
+                }
+            });
+        }
+    };
+    // SEARCH / SORT
+    GravityGraph.prototype.getRelationsOf = function (node) {
+        var _this = this;
+        var name = this.getNameOrIndexOf(node);
+        var relations = [];
+        if (name !== undefined) {
+            this.links.forEach(function (link) {
+                var match = false;
+                if (link.getData().source == name || link.getData().target == name) {
+                    match = true;
+                }
+                if (match) {
+                    var node = _this.nodes[link.getData().source];
+                    relations.push(node);
+                    /*if(relations.indexOf(node) == -1 && node){
+                    }*/
+                    node = _this.nodes[link.getData().target];
+                    relations.push(node);
+                }
+            });
+        }
+        return relations || [];
+    };
+    GravityGraph.prototype.getNameOrIndexOf = function (node) {
+        var name;
+        for (var i = 0; i < this.links.length; i++) {
+            var link = this.links[i];
+            var source = link.getData().source;
+            var target = link.getData().target;
+            if (this.nodes[source] && this.nodes[source].equals(node)) {
+                name = source;
+                break;
+            }
+            else if (this.nodes[target] && this.nodes[target].equals(node)) {
+                name = target;
+                break;
+            }
+        }
+        return name;
     };
     return GravityGraph;
 })();
