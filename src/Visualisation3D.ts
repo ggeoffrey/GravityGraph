@@ -722,16 +722,20 @@ class Visualisation3D {
             links.forEach((link)=> {
                 var source = this.nodes[link.source];
                 var target = this.nodes[link.target];
-    
+                
                 var link3D = new Link3D(source, target, link);
                 this.links.push(link3D);
-                this.rootObject3D.add(link3D);
+                //this.rootObject3D.add(link3D);
     
                 if(this.config.flow && this.config.isWebGL()){
                     var cloud = new Cloud(link3D);
                     this.clouds.push(cloud);
                     this.rootObject3D.add(cloud);
                 }
+                
+                var arrow = new Arrow3D(link3D);
+                this.rootObject3D.add(arrow);
+                
             });
             
             this.d3Instance.setLinks(links);

@@ -6,6 +6,214 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 /// <reference path='headers/three.d.ts' />
+/// <reference path="Arrow3D.ts" />
+var Link3D = (function (_super) {
+    __extends(Link3D, _super);
+    function Link3D(source, target, data) {
+        this.data = {
+            source: data.source,
+            target: data.target
+        };
+        this.source = source;
+        this.target = target;
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push(source.position);
+        geometry.vertices.push(target.position);
+        _super.call(this, geometry, Link3D.defaultMaterial);
+        this.changeDefaults();
+    }
+    Link3D.prototype.changeDefaults = function () {
+        this.castShadow = true;
+        this.position = this.source.position;
+    };
+    Link3D.prototype.getData = function () {
+        return this.data;
+    };
+    Link3D.prototype.setCloud = function (c) {
+        this.cloud = c;
+    };
+    Link3D.prototype.getCloud = function () {
+        return this.cloud;
+    };
+    Link3D.prototype.getLineLength = function () {
+        return this.lineLength;
+    };
+    Link3D.prototype.getSource = function () {
+        return this.source;
+    };
+    Link3D.prototype.getTarget = function () {
+        return this.target;
+    };
+    Link3D.prototype.setArrow = function (arrow) {
+        this.arrow = arrow;
+    };
+    Link3D.prototype.update = function () {
+        this.lineLength = this.source.distanceTo(this.target);
+        this.geometry.verticesNeedUpdate = true;
+        if (this.cloud) {
+            this.cloud.update();
+        }
+        this.arrow.update();
+    };
+    // VIEW
+    Link3D.prototype.setFocused = function () {
+        this.visible = true;
+        this.arrow.line.visible = true;
+        this.arrow.line.material.opacity = 1;
+        this.arrow.line.material.needsUpdate = true;
+        this.arrow.cone.material.opacity = 1;
+        this.arrow.cone.material.needsUpdate = true;
+    };
+    Link3D.prototype.setUnFocused = function () {
+        this.visible = false;
+        this.arrow.line.visible = false;
+        this.arrow.line.material.opacity = 0;
+        this.arrow.line.material.needsUpdate = true;
+        this.arrow.cone.material.opacity = 0;
+        this.arrow.cone.material.needsUpdate = true;
+    };
+    Link3D.defaultMaterial = new THREE.LineBasicMaterial({
+        color: 0x909090
+    });
+    return Link3D;
+})(THREE.Line);
+/// <reference path='headers/GravityGraphData.d.ts' />
+/// <reference path='headers/three.d.ts' />
+var Node3D = (function (_super) {
+    __extends(Node3D, _super);
+    function Node3D(data, config) {
+        /*
+            var material = ?
+            var geometry = ?
+        */
+        var color = Node3D.nodesColor(data.group);
+        var material;
+        if (Node3D.materialsMap[color]) {
+            material = Node3D.materialsMap[color];
+        }
+        else if (config.quality == 2 /* HIGH */) {
+            Node3D.OPACITY = 0.90;
+            material = new THREE.MeshPhongMaterial({
+                color: color,
+                transparent: true,
+                opacity: Node3D.OPACITY,
+                wireframe: false,
+                shininess: 5
+            });
+            Node3D.materialsMap[color] = material;
+        }
+        else if (config.quality < 2 /* HIGH */) {
+            Node3D.OPACITY = 1;
+            material = new THREE.MeshBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: Node3D.OPACITY,
+                wireframe: false
+            });
+            Node3D.materialsMap[color] = material;
+        }
+        if (config.quality > 0 /* LOW */) {
+            if (config.isWebGL()) {
+                _super.call(this, Node3D.basicGeometry, material.clone());
+            }
+            else {
+                _super.call(this, Node3D.degradedGeometry, material.clone());
+            }
+        }
+        else {
+            _super.call(this, Node3D.degradedGeometry, material.clone());
+        }
+        this.data = data;
+        this.quality = config.quality;
+        this.selected = false;
+        this.walked = false;
+        this.changeDefaults();
+    }
+    Node3D.prototype.changeDefaults = function () {
+        this.position.set(0, 0, 0);
+        this.castShadow = true;
+    };
+    // COLOR
+    Node3D.setColorMethod = function (colorScale) {
+        Node3D.nodesColor = colorScale;
+    };
+    Node3D.prototype.getColor = function () {
+        var material = this.material;
+        return material.color;
+    };
+    Node3D.prototype.setColor = function (color) {
+        var material = this.material;
+        material.color.set(color);
+    };
+    // DATA
+    Node3D.prototype.getData = function () {
+        return this.data;
+    };
+    // REFRESH
+    Node3D.prototype.update = function () {
+        this.setColor(Node3D.nodesColor(this.data.group));
+        this.material.needsUpdate = true;
+    };
+    Node3D.prototype.updateTarget = function (position) {
+        if (this.quality == 0 /* LOW */) {
+            this.lookAt(position);
+        }
+    };
+    // UTILS
+    Node3D.prototype.distanceTo = function (node) {
+        return this.position.distanceTo(node.position);
+    };
+    Node3D.prototype.equals = function (node) {
+        return this.getData() == node.getData();
+    };
+    Node3D.prototype.isSameGroupOf = function (node) {
+        return this.getData().group == node.getData().group;
+    };
+    // VISUAL
+    Node3D.prototype.setFocused = function () {
+        this.material.opacity = Node3D.OPACITY;
+        this.material.needsUpdate = true;
+    };
+    Node3D.prototype.setUnFocused = function () {
+        this.material.opacity = 0.375;
+        this.material.needsUpdate = true;
+    };
+    Node3D.nodesColor = d3.scale.category10();
+    Node3D.basicGeometry = new THREE.IcosahedronGeometry(10, 2);
+    Node3D.degradedGeometry = new THREE.IcosahedronGeometry(10, 0);
+    //private static lowQualityGeometry : THREE.CircleGeometry = new THREE.CircleGeometry(10, 20);
+    Node3D.materialsMap = {};
+    Node3D.OPACITY = 0.90;
+    return Node3D;
+})(THREE.Mesh);
+/// <reference path="headers/three.d.ts" />
+/// <reference path="Link3D.ts" />
+/// <reference path="Node3D.ts" />
+var Arrow3D = (function (_super) {
+    __extends(Arrow3D, _super);
+    function Arrow3D(link) {
+        this.sourcePosition = link.getSource().position;
+        this.targetPosition = link.getTarget().position;
+        var direction = this.targetPosition.clone().sub(this.sourcePosition);
+        _super.call(this, direction.clone().normalize(), this.sourcePosition, direction.length(), 0x00ff00);
+        this.changeDefaults();
+        link.setArrow(this);
+    }
+    Arrow3D.prototype.changeDefaults = function () {
+        this.position = this.sourcePosition;
+    };
+    Arrow3D.prototype.update = function () {
+        var direction = this.targetPosition.clone().sub(this.sourcePosition);
+        this.setDirection(direction.normalize());
+        var length = this.sourcePosition.distanceTo(this.targetPosition);
+        var toAdd = this.targetPosition.clone().sub(this.sourcePosition).normalize().multiplyScalar(1); //length/2);
+        this.position.copy(this.sourcePosition.clone().add(toAdd));
+        this.setLength(length * 0.9);
+    };
+    return Arrow3D;
+})(THREE.ArrowHelper);
+/// <reference path='headers/GravityGraphData.d.ts' />
+/// <reference path='headers/three.d.ts' />
 var Cloud = (function (_super) {
     __extends(Cloud, _super);
     function Cloud(link) {
@@ -262,173 +470,6 @@ var D3Wrapper = (function () {
     };
     return D3Wrapper;
 })();
-/// <reference path='headers/GravityGraphData.d.ts' />
-/// <reference path='headers/three.d.ts' />
-var Node3D = (function (_super) {
-    __extends(Node3D, _super);
-    function Node3D(data, config) {
-        /*
-            var material = ?
-            var geometry = ?
-        */
-        var color = Node3D.nodesColor(data.group);
-        var material;
-        if (Node3D.materialsMap[color]) {
-            material = Node3D.materialsMap[color];
-        }
-        else if (config.quality == 2 /* HIGH */) {
-            Node3D.OPACITY = 0.90;
-            material = new THREE.MeshPhongMaterial({
-                color: color,
-                transparent: true,
-                opacity: Node3D.OPACITY,
-                wireframe: false,
-                shininess: 5
-            });
-            Node3D.materialsMap[color] = material;
-        }
-        else if (config.quality < 2 /* HIGH */) {
-            Node3D.OPACITY = 1;
-            material = new THREE.MeshBasicMaterial({
-                color: color,
-                transparent: true,
-                opacity: Node3D.OPACITY,
-                wireframe: false
-            });
-            Node3D.materialsMap[color] = material;
-        }
-        if (config.quality > 0 /* LOW */) {
-            if (config.isWebGL()) {
-                _super.call(this, Node3D.basicGeometry, material.clone());
-            }
-            else {
-                _super.call(this, Node3D.degradedGeometry, material.clone());
-            }
-        }
-        else {
-            _super.call(this, Node3D.degradedGeometry, material.clone());
-        }
-        this.data = data;
-        this.quality = config.quality;
-        this.selected = false;
-        this.walked = false;
-        this.changeDefaults();
-    }
-    Node3D.prototype.changeDefaults = function () {
-        this.position.set(0, 0, 0);
-        this.castShadow = true;
-    };
-    // COLOR
-    Node3D.setColorMethod = function (colorScale) {
-        Node3D.nodesColor = colorScale;
-    };
-    Node3D.prototype.getColor = function () {
-        var material = this.material;
-        return material.color;
-    };
-    Node3D.prototype.setColor = function (color) {
-        var material = this.material;
-        material.color.set(color);
-    };
-    // DATA
-    Node3D.prototype.getData = function () {
-        return this.data;
-    };
-    // REFRESH
-    Node3D.prototype.update = function () {
-        this.setColor(Node3D.nodesColor(this.data.group));
-        this.material.needsUpdate = true;
-    };
-    Node3D.prototype.updateTarget = function (position) {
-        if (this.quality == 0 /* LOW */) {
-            this.lookAt(position);
-        }
-    };
-    // UTILS
-    Node3D.prototype.distanceTo = function (node) {
-        return this.position.distanceTo(node.position);
-    };
-    Node3D.prototype.equals = function (node) {
-        return this.getData() == node.getData();
-    };
-    Node3D.prototype.isSameGroupOf = function (node) {
-        return this.getData().group == node.getData().group;
-    };
-    // VISUAL
-    Node3D.prototype.setFocused = function () {
-        this.material.opacity = Node3D.OPACITY;
-        this.material.needsUpdate = true;
-    };
-    Node3D.prototype.setUnFocused = function () {
-        this.material.opacity = 0.375;
-        this.material.needsUpdate = true;
-    };
-    Node3D.nodesColor = d3.scale.category10();
-    Node3D.basicGeometry = new THREE.IcosahedronGeometry(10, 2);
-    Node3D.degradedGeometry = new THREE.IcosahedronGeometry(10, 0);
-    //private static lowQualityGeometry : THREE.CircleGeometry = new THREE.CircleGeometry(10, 20);
-    Node3D.materialsMap = {};
-    Node3D.OPACITY = 0.90;
-    return Node3D;
-})(THREE.Mesh);
-/// <reference path='headers/GravityGraphData.d.ts' />
-/// <reference path='headers/three.d.ts' />
-var Link3D = (function (_super) {
-    __extends(Link3D, _super);
-    function Link3D(source, target, data) {
-        this.data = {
-            source: data.source,
-            target: data.target
-        };
-        this.source = source;
-        this.target = target;
-        var geometry = new THREE.Geometry();
-        geometry.vertices.push(source.position);
-        geometry.vertices.push(target.position);
-        _super.call(this, geometry, Link3D.defaultMaterial);
-        this.changeDefaults();
-    }
-    Link3D.prototype.changeDefaults = function () {
-        this.castShadow = true;
-        this.position = this.source.position;
-    };
-    Link3D.prototype.getData = function () {
-        return this.data;
-    };
-    Link3D.prototype.setCloud = function (c) {
-        this.cloud = c;
-    };
-    Link3D.prototype.getCloud = function () {
-        return this.cloud;
-    };
-    Link3D.prototype.getLineLength = function () {
-        return this.lineLength;
-    };
-    Link3D.prototype.getSource = function () {
-        return this.source;
-    };
-    Link3D.prototype.getTarget = function () {
-        return this.target;
-    };
-    Link3D.prototype.update = function () {
-        this.lineLength = this.source.distanceTo(this.target);
-        this.geometry.verticesNeedUpdate = true;
-        if (this.cloud) {
-            this.cloud.update();
-        }
-    };
-    // VIEW
-    Link3D.prototype.setFocused = function () {
-        this.visible = true;
-    };
-    Link3D.prototype.setUnFocused = function () {
-        this.visible = false;
-    };
-    Link3D.defaultMaterial = new THREE.LineBasicMaterial({
-        color: 0x909090
-    });
-    return Link3D;
-})(THREE.Line);
 /// <reference path='headers/GravityGraphData.d.ts' />
 /// <reference path='headers/three.d.ts' />
 /// <reference path='headers/tweenjs.d.ts' />
@@ -887,12 +928,14 @@ var Visualisation3D = (function () {
                 var target = _this.nodes[link.target];
                 var link3D = new Link3D(source, target, link);
                 _this.links.push(link3D);
-                _this.rootObject3D.add(link3D);
+                //this.rootObject3D.add(link3D);
                 if (_this.config.flow && _this.config.isWebGL()) {
                     var cloud = new Cloud(link3D);
                     _this.clouds.push(cloud);
                     _this.rootObject3D.add(cloud);
                 }
+                var arrow = new Arrow3D(link3D);
+                _this.rootObject3D.add(arrow);
             });
             this.d3Instance.setLinks(links);
             return this.links;

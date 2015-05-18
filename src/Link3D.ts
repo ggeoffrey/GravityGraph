@@ -3,6 +3,10 @@
 /// <reference path='headers/three.d.ts' />
 
 
+/// <reference path="Arrow3D.ts" />
+
+
+
 
 class Link3D extends THREE.Line implements IFocusableElement {
 
@@ -19,6 +23,8 @@ class Link3D extends THREE.Line implements IFocusableElement {
     private cloud : Cloud;
 
     private lineLength: number;
+    
+    private arrow : Arrow3D;
 
     constructor(source:Node3D, target:Node3D, data: ILinkData) {
 
@@ -36,6 +42,7 @@ class Link3D extends THREE.Line implements IFocusableElement {
 
         super(geometry, Link3D.defaultMaterial);
 
+        
 
         this.changeDefaults();
     }
@@ -60,6 +67,11 @@ class Link3D extends THREE.Line implements IFocusableElement {
 
     public getSource(){ return this.source; }
     public getTarget(){ return this.target; }
+    
+    
+    public setArrow(arrow){
+        this.arrow = arrow;
+    }
 
 
     public update(){
@@ -68,6 +80,7 @@ class Link3D extends THREE.Line implements IFocusableElement {
         if(this.cloud){
             this.cloud.update();
         }
+        this.arrow.update();
     }
     
     
@@ -76,10 +89,20 @@ class Link3D extends THREE.Line implements IFocusableElement {
     
     public setFocused(){
         this.visible = true;
+        this.arrow.line.visible = true;
+        this.arrow.line.material.opacity = 1;
+        this.arrow.line.material.needsUpdate = true; 
+        this.arrow.cone.material.opacity = 1;
+        this.arrow.cone.material.needsUpdate = true; 
     }
     
     public setUnFocused(){
         this.visible = false;
+        this.arrow.line.visible = false;
+        this.arrow.line.material.opacity = 0;
+        this.arrow.line.material.needsUpdate = true;
+        this.arrow.cone.material.opacity = 0;
+        this.arrow.cone.material.needsUpdate = true;
     }
 
 }
