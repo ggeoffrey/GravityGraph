@@ -6,6 +6,9 @@
 class NodeSelectAnimation extends THREE.Line {
 	
 	
+	private animation; // : createjs.Tween;
+	private animatedObject:any; 
+	
 	constructor(){
 		
 		
@@ -30,24 +33,27 @@ class NodeSelectAnimation extends THREE.Line {
 			
 		super(geometry, material);
 		this.changeDefaults();
+		
+		this.animatedObject = {scale : 0};
+		this.animation = new createjs.Tween(this.animatedObject,
+		{
+			loop : true,
+		})
+		.to({
+			scale : 100
+		}, 1000);
+		
 	}
 	
 	private changeDefaults(){
-		this.scale.set(0,0,0);
+		this.scale.set(1,1,1);
 		this.material.opacity = 1;
 	}
 	
 	
 	public update(target : THREE.Vector3){
-		var s = this.scale.x;
+		var s = this.animatedObject.scale / 100;
 
-		if(s < 1){
-			s += 0.025;
-		}
-		else{
-			s = 0;
-		}
-		
 		
 		this.scale.set(s,s,s);
 		this.material.opacity = 1-s;

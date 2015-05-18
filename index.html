@@ -21,10 +21,16 @@
 
     <script src="vendors/three.js"></script>
     <script src="vendors/OrbitControls.js"></script>
+    <script src="vendors/CanvasRenderer.js"></script>
+    <script src="vendors/Projector.js"></script>
+        
     <script src="vendors/d3.js"></script>
     <script src="vendors/d3.layout.force3D.js"></script>
+        
     <script src="vendors/stats.min.js"></script>
     <script src="vendors/tweenjs-0.6.0.min.js"></script>
+    
+    
 
     <script src="dist/GravityGraph.js"></script>
 
@@ -36,9 +42,9 @@
             target : 'dev-canvas',
             //opacity: 0,
             //backgroundColor : 0xffffff,
-            quality : "high",
+            quality : "low",
             flat : true,
-            flow : false,
+            flow : true,
             stats : true
         });
         

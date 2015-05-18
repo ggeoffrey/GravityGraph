@@ -395,19 +395,19 @@ var NodeSelectAnimation = (function (_super) {
         }
         _super.call(this, geometry, material);
         this.changeDefaults();
+        this.animatedObject = { scale: 0 };
+        this.animation = new createjs.Tween(this.animatedObject, {
+            loop: true,
+        }).to({
+            scale: 100
+        }, 1000);
     }
     NodeSelectAnimation.prototype.changeDefaults = function () {
-        this.scale.set(0, 0, 0);
+        this.scale.set(1, 1, 1);
         this.material.opacity = 1;
     };
     NodeSelectAnimation.prototype.update = function (target) {
-        var s = this.scale.x;
-        if (s < 1) {
-            s += 0.025;
-        }
-        else {
-            s = 0;
-        }
+        var s = this.animatedObject.scale / 100;
         this.scale.set(s, s, s);
         this.material.opacity = 1 - s;
         this.material.needsUpdate = true;
@@ -424,7 +424,6 @@ var NodeSelectAnimation = (function (_super) {
 /// <reference path='headers/three-orbitcontrols.d.ts' />
 /// <reference path='headers/three-projector.d.ts' />
 /// <reference path='headers/d3.d.ts' />
-/// <reference path='headers/tweenjs.d.ts' />
 /// <reference path='Node3D.ts' />
 /// <reference path='Link3D.ts' />
 /// <reference path='Cloud.ts' />
@@ -446,7 +445,7 @@ var Visualisation3D = (function () {
         };
         this.lights = new Array();
         var transparentRenderer = this.config.isTransparent();
-        this.renderer = new THREE.WebGLRenderer({
+        this.renderer = new THREE.CanvasRenderer({
             canvas: this.canvas,
             antialias: true,
             alpha: transparentRenderer,
@@ -936,13 +935,14 @@ var GravityGraph = (function () {
             }
         });
     };
-    GravityGraph.prototype.run = function () {
+    GravityGraph.prototype.run = function (time) {
         var _this = this;
         if (this.stats) {
             this.stats.begin();
         }
         if (!this.paused) {
             this.update();
+            //TWEEN.update(time);
             this.render();
             requestAnimationFrame(function () {
                 _this.run();

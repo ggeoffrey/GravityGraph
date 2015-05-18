@@ -13,6 +13,7 @@
 /// <reference path='Events.ts' />
 
 declare var Stats;
+declare var TWEEN ;
 
 var U = new Utils();
 
@@ -162,7 +163,7 @@ class GravityGraph {
         });
     }
 
-    private run():void {
+    private run( time? ):void {
         
         if(this.stats){
             this.stats.begin();
@@ -170,6 +171,7 @@ class GravityGraph {
             
         if (!this.paused) {
             this.update();
+            //TWEEN.update(time);
             this.render();
             requestAnimationFrame(()=> {
                 this.run();

@@ -6,7 +6,7 @@
 /// <reference path='headers/three-projector.d.ts' />
 
 /// <reference path='headers/d3.d.ts' />
-/// <reference path='headers/tweenjs.d.ts' />
+
 
 /// <reference path='Node3D.ts' />
 /// <reference path='Link3D.ts' />
@@ -81,7 +81,7 @@ class Visualisation3D {
 
 
         var transparentRenderer = this.config.isTransparent();
-        this.renderer = new THREE.WebGLRenderer({
+        this.renderer = new (<any>THREE).CanvasRenderer({
             canvas: this.canvas,
             antialias: true,
             alpha: transparentRenderer,
