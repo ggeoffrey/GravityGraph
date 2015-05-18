@@ -88,6 +88,7 @@ var Events = (function () {
 /**
 * Created by Geoffrey on 5/10/2015.
 */
+/// <reference path="headers/Detector.d.ts" />
 var EQuality;
 (function (EQuality) {
     EQuality[EQuality["LOW"] = 0] = "LOW";
@@ -116,6 +117,13 @@ var Options = (function () {
     function Options(config) {
         this.U = new Utils();
         this._config = config;
+        this.webglAvailable = Detector.webgl;
+        if (this.quality > 1 /* MEDIUM */ && !this.isWebGL()) {
+            this._config.quality = "medium";
+            console.warn("Degraded mode ! (slower)");
+            console.warn("WebGL is disabled, your drivers, your DirectX version or your browser are outdated.");
+            console.warn("Please update your software.  (https://get.webgl.org/)");
+        }
     }
     Object.defineProperty(Options.prototype, "target", {
         get: function () {
@@ -145,7 +153,7 @@ var Options = (function () {
     });
     Object.defineProperty(Options.prototype, "opacity", {
         get: function () {
-            return parseFloat(this._config.opacity) || 0;
+            return parseFloat(this._config.opacity) || 1;
         },
         enumerable: true,
         configurable: true
@@ -177,6 +185,9 @@ var Options = (function () {
         enumerable: true,
         configurable: true
     });
+    Options.prototype.isWebGL = function () {
+        return this.webglAvailable;
+    };
     return Options;
 })();
 /// <reference path="headers/GravityGraphData.d.ts" />
@@ -423,6 +434,7 @@ var NodeSelectAnimation = (function (_super) {
 /// <reference path='headers/three.d.ts' />
 /// <reference path='headers/three-orbitcontrols.d.ts' />
 /// <reference path='headers/three-projector.d.ts' />
+/// <reference path='headers/three-canvasrenderer.d.ts' />
 /// <reference path='headers/d3.d.ts' />
 /// <reference path='Node3D.ts' />
 /// <reference path='Link3D.ts' />
@@ -445,12 +457,23 @@ var Visualisation3D = (function () {
         };
         this.lights = new Array();
         var transparentRenderer = this.config.isTransparent();
-        this.renderer = new THREE.CanvasRenderer({
-            canvas: this.canvas,
-            antialias: true,
-            alpha: transparentRenderer,
-            devicePixelRatio: window.devicePixelRatio
-        });
+        if (this.config.isWebGL()) {
+            this.renderer = new THREE.WebGLRenderer({
+                canvas: this.canvas,
+                antialias: true,
+                alpha: transparentRenderer,
+                devicePixelRatio: window.devicePixelRatio
+            });
+        }
+        else {
+            var renderer = new THREE.CanvasRenderer({
+                canvas: this.canvas,
+                antialias: true,
+                alpha: transparentRenderer,
+                devicePixelRatio: window.devicePixelRatio
+            });
+            this.renderer = renderer;
+        }
         if (!transparentRenderer) {
             this.config.opacity = 1;
         }

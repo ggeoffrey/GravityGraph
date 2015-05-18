@@ -4,6 +4,7 @@
 /// <reference path='headers/three.d.ts' />
 /// <reference path='headers/three-orbitcontrols.d.ts' />
 /// <reference path='headers/three-projector.d.ts' />
+/// <reference path='headers/three-canvasrenderer.d.ts' />
 
 /// <reference path='headers/d3.d.ts' />
 
@@ -75,26 +76,40 @@ class Visualisation3D {
             y: 0
         };
 
-        this.lights = new Array();
-        
-        
+        this.lights = new Array();      
 
 
         var transparentRenderer = this.config.isTransparent();
-        this.renderer = new (<any>THREE).CanvasRenderer({
-            canvas: this.canvas,
-            antialias: true,
-            alpha: transparentRenderer,
-            devicePixelRatio: window.devicePixelRatio
-        });
+        
+        if(this.config.isWebGL()){
+            this.renderer = new THREE.WebGLRenderer({
+                canvas: this.canvas,
+                antialias: true,
+                alpha: transparentRenderer,
+                devicePixelRatio: window.devicePixelRatio
+            });
+        }
+        else{
+            var renderer = new THREE.CanvasRenderer({
+                canvas: this.canvas,
+                antialias: true,
+                alpha: transparentRenderer,
+                devicePixelRatio: window.devicePixelRatio
+            });
+            
+            this.renderer = <any> renderer;
+        }
+        
 
         if(!transparentRenderer){
             this.config.opacity = 1;
         }
 
+        
         this.renderer.shadowMapEnabled = true;
         this.renderer.shadowMapType = THREE.PCFShadowMap;
         this.renderer.sortObjects = false;
+        
 
 
         this.renderer.setClearColor(
@@ -276,6 +291,7 @@ class Visualisation3D {
 
         var sphereBackgroundWidth = 20;
         var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
+        
         var sphereBackgroundMat = new THREE.MeshLambertMaterial({
             color: 0xa0a0a0,//0x404040,
             ambient: 0xffffff,

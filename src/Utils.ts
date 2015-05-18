@@ -1,6 +1,7 @@
 /**
 * Created by Geoffrey on 5/10/2015.
 */
+/// <reference path="headers/Detector.d.ts" />
 
 
 enum EQuality{
@@ -36,12 +37,24 @@ class Utils {
 class Options{
 
     private _config : IOptions;
+    
+    private webglAvailable : boolean;
 
     private U = new Utils();
 
 
     constructor(config : IOptions){
         this._config = config;
+               
+        this.webglAvailable = Detector.webgl
+        
+        if(this.quality > EQuality.MEDIUM && ! this.isWebGL()){
+            this._config.quality = "medium";
+            console.warn("Degraded mode ! (slower)");
+            console.warn("WebGL is disabled, your drivers, your DirectX version or your browser are outdated.");
+            console.warn("Please update your software.  (https://get.webgl.org/)");
+        }
+        
     }
 
 
@@ -67,7 +80,7 @@ class Options{
 
 
     public get opacity(){
-        return parseFloat(<any>this._config.opacity) || 0;
+        return parseFloat(<any>this._config.opacity) || 1;
     }
 
     public get backgroundColor(){
@@ -91,5 +104,10 @@ class Options{
     
     public get stats() : boolean{
         return this.U.parseBoolean(this._config.stats)
+    }
+    
+    
+    public isWebGL(){
+        return this.webglAvailable;
     }
 }
