@@ -15,6 +15,18 @@ interface IWorkerMessaqe { // extends MessageEvent{
 
 
 
+interface IGraph {
+    nodes : Array<Node3D>;
+    links : Array<Link3D>;
+}
+
+
+interface IMouse{
+    x: number;
+    y: number;
+}
+
+
 
 interface IOptions{
     target : string;
@@ -43,7 +55,10 @@ interface ILinkData{
 }
 
 
-interface IMouse{
-    x: number;
-    y: number;
+
+interface IFocusableElement{
+    setFocused() : void;
+    setUnFocused() : void;
 }
+
+

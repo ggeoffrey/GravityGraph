@@ -3,7 +3,7 @@
 /// <reference path='headers/three.d.ts' />
 
 
-class Node3D extends THREE.Mesh {
+class Node3D extends THREE.Mesh implements IFocusableElement {
 
         private static nodesColor = d3.scale.category10();
 
@@ -152,7 +152,7 @@ class Node3D extends THREE.Mesh {
         }
         
         public setUnFocused(){
-            this.material.opacity = 0.25;
+            this.material.opacity = 0.375;
             this.material.needsUpdate = true;
         }
 

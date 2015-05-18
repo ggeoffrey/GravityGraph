@@ -360,7 +360,7 @@ var Node3D = (function (_super) {
         this.material.needsUpdate = true;
     };
     Node3D.prototype.setUnFocused = function () {
-        this.material.opacity = 0.25;
+        this.material.opacity = 0.375;
         this.material.needsUpdate = true;
     };
     Node3D.nodesColor = d3.scale.category10();
@@ -416,6 +416,13 @@ var Link3D = (function (_super) {
         if (this.cloud) {
             this.cloud.update();
         }
+    };
+    // VIEW
+    Link3D.prototype.setFocused = function () {
+        this.visible = true;
+    };
+    Link3D.prototype.setUnFocused = function () {
+        this.visible = false;
     };
     Link3D.defaultMaterial = new THREE.LineBasicMaterial({
         color: 0x909090
@@ -619,13 +626,12 @@ var Visualisation3D = (function () {
     Visualisation3D.prototype.addBackground = function () {
         var sphereBackgroundWidth = 20;
         var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
-        var sphereBackgroundMat = new THREE.MeshPhongMaterial({
+        var sphereBackgroundMat = new THREE.MeshLambertMaterial({
             color: 0xa0a0a0,
             ambient: 0xffffff,
             side: 1,
             transparent: this.config.isTransparent(),
             opacity: this.config.opacity,
-            shininess: 100
         });
         var sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
         sphereBackground.receiveShadow = true;
@@ -676,6 +682,12 @@ var Visualisation3D = (function () {
         }, false);
         this.renderer.domElement.addEventListener('mouseup', function (e) {
             _this.onDocumentMouseUp(e);
+        }, false);
+        this.renderer.domElement.addEventListener('dblclick', function (e) {
+            _this.events.emit("dblclick", []);
+        }, false);
+        this.renderer.domElement.addEventListener('contextmenu', function (e) {
+            _this.events.emit("contextmenu", []);
         }, false);
         this.raycaster = new THREE.Raycaster();
         this.projectionOffset = new THREE.Vector3(0, 0, 0);
@@ -916,7 +928,6 @@ var GravityGraph = (function () {
         this.vis3D = new Visualisation3D(this.config, this.force);
         this.paused = false;
         console.info("Starting main loop.");
-        this.initD3();
         if (this.config.stats) {
             this.addStats();
         }
@@ -941,6 +952,12 @@ var GravityGraph = (function () {
                 args[_i - 0] = arguments[_i];
             }
             _this.events.emit("nodeSelected", args);
+        });
+        this.vis3D.on("dblclick", function () {
+            _this.focusOnRelations();
+        });
+        this.vis3D.on("contextmenu", function () {
+            _this.resetFocus();
         });
         // ----------------
         this.run();
@@ -981,21 +998,11 @@ var GravityGraph = (function () {
     /**
      * Initialise a 3D scene
      */
-    GravityGraph.prototype.initD3 = function () {
-        // TESTS   --------------------------------------------------------------------------
-        var _this = this;
-        this.nodes = [];
-        this.links = [];
-        d3.json("data-test/miserables.json", function (error, graph) {
-            if (error) {
-                console.error(error);
-            }
-            else {
-                _this.nodes = _this.vis3D.setNodes(graph.nodes);
-                _this.links = _this.vis3D.setLinks(graph.links);
-                _this.vis3D.start();
-            }
-        });
+    GravityGraph.prototype.setNodes = function (nodes) {
+        this.nodes = this.vis3D.setNodes(nodes);
+    };
+    GravityGraph.prototype.setLinks = function (links) {
+        this.links = this.vis3D.setLinks(links);
     };
     GravityGraph.prototype.run = function (time) {
         var _this = this;
@@ -1013,6 +1020,9 @@ var GravityGraph = (function () {
         if (this.stats) {
             this.stats.end();
         }
+    };
+    GravityGraph.prototype.start = function () {
+        this.vis3D.start();
     };
     GravityGraph.prototype.pause = function () {
         this.paused = true;
@@ -1065,17 +1075,28 @@ var GravityGraph = (function () {
         this.nodes.forEach(function (node) {
             node.setFocused();
         });
+        this.links.forEach(function (link) {
+            link.setFocused();
+        });
     };
     GravityGraph.prototype.focusOnRelations = function () {
         if (this.vis3D.getSelectedNode()) {
             var relations = this.getRelationsOf(this.vis3D.getSelectedNode());
             console.log(relations);
             this.nodes.forEach(function (node) {
-                if (relations.indexOf(node) != -1) {
+                if (relations.nodes.indexOf(node) != -1) {
                     node.setFocused();
                 }
                 else {
                     node.setUnFocused();
+                }
+            });
+            this.links.forEach(function (link) {
+                if (relations.links.indexOf(link) != -1) {
+                    link.setFocused();
+                }
+                else {
+                    link.setUnFocused();
                 }
             });
         }
@@ -1098,24 +1119,27 @@ var GravityGraph = (function () {
     GravityGraph.prototype.getRelationsOf = function (node) {
         var _this = this;
         var name = this.getNameOrIndexOf(node);
-        var relations = [];
+        var relations = {
+            nodes: [],
+            links: []
+        };
         if (name !== undefined) {
             this.links.forEach(function (link) {
                 var match = false;
                 if (link.getData().source == name || link.getData().target == name) {
-                    match = true;
-                }
-                if (match) {
                     var node = _this.nodes[link.getData().source];
-                    relations.push(node);
-                    /*if(relations.indexOf(node) == -1 && node){
-                    }*/
+                    if (relations.nodes.indexOf(node) == -1 && node) {
+                        relations.nodes.push(node);
+                    }
                     node = _this.nodes[link.getData().target];
-                    relations.push(node);
+                    if (relations.nodes.indexOf(node) == -1 && node) {
+                        relations.nodes.push(node);
+                    }
+                    relations.links.push(link);
                 }
             });
         }
-        return relations || [];
+        return relations;
     };
     GravityGraph.prototype.getNameOrIndexOf = function (node) {
         var name;

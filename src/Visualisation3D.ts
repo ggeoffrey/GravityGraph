@@ -292,13 +292,13 @@ class Visualisation3D {
         var sphereBackgroundWidth = 20;
         var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
         
-        var sphereBackgroundMat = new THREE.MeshPhongMaterial({
+        var sphereBackgroundMat = new THREE.MeshLambertMaterial({
             color: 0xa0a0a0,//0x404040,
             ambient: 0xffffff,
             side: 1,
             transparent: this.config.isTransparent(),
             opacity : this.config.opacity,
-            shininess: 100
+            
         });
         var sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
 
@@ -385,7 +385,15 @@ class Visualisation3D {
         this.renderer.domElement.addEventListener( 'mouseup', (e:MouseEvent)=>{
             this.onDocumentMouseUp(e);
         }, false );
-
+        
+        this.renderer.domElement.addEventListener( 'dblclick', (e:MouseEvent)=>{
+            this.events.emit("dblclick", []);
+        }, false );
+        
+        this.renderer.domElement.addEventListener( 'contextmenu', (e:MouseEvent)=>{
+            this.events.emit("contextmenu", []);
+        }, false );
+        
 
         this.raycaster = new THREE.Raycaster();
         this.projectionOffset = new THREE.Vector3(0,0,0);

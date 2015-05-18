@@ -4,7 +4,7 @@
 
 
 
-class Link3D extends THREE.Line {
+class Link3D extends THREE.Line implements IFocusableElement {
 
     private static defaultMaterial:THREE.LineBasicMaterial = new THREE.LineBasicMaterial({
         color : 0x909090
@@ -68,6 +68,18 @@ class Link3D extends THREE.Line {
         if(this.cloud){
             this.cloud.update();
         }
+    }
+    
+    
+    // VIEW
+    
+    
+    public setFocused(){
+        this.visible = true;
+    }
+    
+    public setUnFocused(){
+        this.visible = false;
     }
 
 }

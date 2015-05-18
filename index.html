@@ -77,6 +77,19 @@
         });
         
         
+        d3.json("data-test/miserables.json", function(error, graph) {
+            if (error) {
+                console.error(error);
+            }
+            else {
+                gravityGraph.setNodes(graph.nodes);
+                gravityGraph.setLinks(graph.links);
+                               
+                gravityGraph.start();
+            }
+        });
+        
+        
     </script>
 </body>
 </html>

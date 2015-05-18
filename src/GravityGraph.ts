@@ -68,8 +68,6 @@ class GravityGraph {
 
         console.info("Starting main loop.");
 
-
-        this.initD3();
         
         if(this.config.stats){
             this.addStats();
@@ -88,6 +86,14 @@ class GravityGraph {
         
         this.vis3D.on("nodeSelected", (...args)=>{
             this.events.emit("nodeSelected", args);
+        });
+        
+        this.vis3D.on("dblclick", ()=>{
+            this.focusOnRelations();
+        });
+        
+        this.vis3D.on("contextmenu", ()=>{
+            this.resetFocus();
         });
         
         
@@ -137,33 +143,15 @@ class GravityGraph {
      */
        
 
+    public setNodes(nodes : Array<INodeData>){
+         this.nodes = this.vis3D.setNodes(nodes);
+    }
     
+    public setLinks(links : Array<ILinkData>){
+        this.links = this.vis3D.setLinks(links);
+    }
       
     
-
-    private initD3() {
-
-       
-
-        // TESTS   --------------------------------------------------------------------------
-
-        this.nodes = [];
-        this.links = [];
-        
-
-        d3.json("data-test/miserables.json", (error, graph) => {
-            if (error) {
-                console.error(error);
-            }
-            else {
-                this.nodes = this.vis3D.setNodes(graph.nodes);
-                this.links = this.vis3D.setLinks(graph.links);
-                               
-                this.vis3D.start();
-            }
-        });
-    }
-
     private run( time? ):void {
         
         if(this.stats){
@@ -183,6 +171,11 @@ class GravityGraph {
             this.stats.end();
         }
         
+    }
+    
+    
+    public start(){
+        this.vis3D.start();
     }
 
     public pause():void {
@@ -274,6 +267,9 @@ class GravityGraph {
         this.nodes.forEach((node) => {
             node.setFocused();
         });
+        this.links.forEach((link) => {
+            link.setFocused();
+        });
     }
     
     public focusOnRelations(){
@@ -282,11 +278,19 @@ class GravityGraph {
             
             console.log(relations);
             this.nodes.forEach((node)=>{
-               if(relations.indexOf(node) != -1){
+               if(relations.nodes.indexOf(node) != -1){
                    node.setFocused();
                }
                else{
                    node.setUnFocused();
+               }
+            });
+            this.links.forEach((link)=>{
+               if(relations.links.indexOf(link) != -1){
+                   link.setFocused();
+               }
+               else{
+                   link.setUnFocused();
                }
             });
         }
@@ -312,11 +316,15 @@ class GravityGraph {
     
     // SEARCH / SORT
     
-    private getRelationsOf(node:Node3D){
+    private getRelationsOf(node:Node3D) : IGraph  {
         var name = this.getNameOrIndexOf(node);
         
         
-        var relations : Array<Node3D> = [];
+        var relations : IGraph = {
+            nodes : [],
+            links : []
+        };
+        
         if(name !== undefined ){
             this.links.forEach((link) => {
                 
@@ -324,25 +332,24 @@ class GravityGraph {
                 var match = false;
                 
                 if(link.getData().source == name || link.getData().target == name){
-                    match = true;
-                }
                 
-                
-                if(match){
                     var node = this.nodes[link.getData().source];
-                        relations.push(node);
-                    /*if(relations.indexOf(node) == -1 && node){
-                    }*/
+                    if(relations.nodes.indexOf(node) == -1 && node){
+                        relations.nodes.push(node);
+                    }
                     node = this.nodes[link.getData().target];
-                        relations.push(node);
-                    /*if(relations.indexOf(node) == -1 && node){
-                    }*/
+                    if(relations.nodes.indexOf(node) == -1 && node){
+                        relations.nodes.push(node);
+                    }
+                    
+                    relations.links.push(link);
+                    
                 }             
                 
             });
         }
         
-        return relations || [];        
+        return relations;        
     }
     
     private getNameOrIndexOf(node:Node3D){

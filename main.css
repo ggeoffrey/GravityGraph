@@ -27,3 +27,11 @@ body{
     opacity: 0;
     
 }
+
+
+#toolbar{
+    position: absolute;
+    top: 0;
+    text-align: center;
+    width: 100%;
+}
