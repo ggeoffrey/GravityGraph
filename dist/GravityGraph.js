@@ -277,11 +277,12 @@ var Node3D = (function (_super) {
             material = Node3D.materialsMap[color];
         }
         else if (config.quality == 2 /* HIGH */) {
-            material = new THREE.MeshLambertMaterial({
+            material = new THREE.MeshPhongMaterial({
                 color: color,
-                transparent: false,
-                opacity: 0.75,
-                wireframe: false
+                transparent: true,
+                opacity: 0.90,
+                wireframe: false,
+                shininess: 5
             });
             Node3D.materialsMap[color] = material;
         }
@@ -295,10 +296,15 @@ var Node3D = (function (_super) {
             Node3D.materialsMap[color] = material;
         }
         if (config.quality > 0 /* LOW */) {
-            _super.call(this, Node3D.basicGeometry, material);
+            if (config.isWebGL()) {
+                _super.call(this, Node3D.basicGeometry, material);
+            }
+            else {
+                _super.call(this, Node3D.degradedGeometry, material);
+            }
         }
         else {
-            _super.call(this, Node3D.lowQualityGeometry, material);
+            _super.call(this, Node3D.degradedGeometry, material);
         }
         this.data = data;
         this.quality = config.quality;
@@ -341,8 +347,9 @@ var Node3D = (function (_super) {
         return this.position.distanceTo(node.position);
     };
     Node3D.nodesColor = d3.scale.category10();
-    Node3D.basicGeometry = new THREE.SphereGeometry(10, 10, 10);
-    Node3D.lowQualityGeometry = new THREE.CircleGeometry(10, 20);
+    Node3D.basicGeometry = new THREE.IcosahedronGeometry(10, 2);
+    Node3D.degradedGeometry = new THREE.IcosahedronGeometry(10, 0);
+    //private static lowQualityGeometry : THREE.CircleGeometry = new THREE.CircleGeometry(10, 20);
     Node3D.materialsMap = {};
     return Node3D;
 })(THREE.Mesh);
@@ -587,12 +594,13 @@ var Visualisation3D = (function () {
     Visualisation3D.prototype.addBackground = function () {
         var sphereBackgroundWidth = 20;
         var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
-        var sphereBackgroundMat = new THREE.MeshLambertMaterial({
+        var sphereBackgroundMat = new THREE.MeshPhongMaterial({
             color: 0xa0a0a0,
             ambient: 0xffffff,
             side: 1,
             transparent: this.config.isTransparent(),
-            opacity: this.config.opacity
+            opacity: this.config.opacity,
+            shininess: 100
         });
         var sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
         sphereBackground.receiveShadow = true;
@@ -802,12 +810,13 @@ var Visualisation3D = (function () {
         // nodes
         i = 0, len = this.nodes.length;
         var target = this.camera.position.clone().sub(this.rootObject3D.position);
-        if (this.config.quality == 0 /* LOW */) {
-            while (i < len) {
+        /*if(this.config.quality == EQuality.LOW){
+            while(i<len){
                 this.nodes[i].lookAt(target);
                 i++;
             }
         }
+        */
         if (this.selectedNode) {
             this.nodeSelectAnimation.update(target);
         }
@@ -826,7 +835,6 @@ var Visualisation3D = (function () {
             _this.rootObject3D.add(n);
             position.push(n.position);
         });
-        //console.log(position);
         this.d3Instance.setNodes(position);
     };
     Visualisation3D.prototype.setLinks = function (links) {
@@ -842,7 +850,7 @@ var Visualisation3D = (function () {
                 var link3D = new Link3D(source, target);
                 _this.links.push(link3D);
                 _this.rootObject3D.add(link3D);
-                if (_this.config.flow) {
+                if (_this.config.flow && _this.config.isWebGL()) {
                     var cloud = new Cloud(link3D);
                     _this.clouds.push(cloud);
                     _this.rootObject3D.add(cloud);

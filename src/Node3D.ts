@@ -7,8 +7,10 @@ class Node3D extends THREE.Mesh {
 
         private static nodesColor = d3.scale.category10();
 
-        private static basicGeometry : THREE.SphereGeometry = new THREE.SphereGeometry(10, 10, 10);
-        private static lowQualityGeometry : THREE.CircleGeometry = new THREE.CircleGeometry(10, 20);
+        private static basicGeometry : THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(10, 2);
+        private static degradedGeometry : THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(10, 0);
+        
+        //private static lowQualityGeometry : THREE.CircleGeometry = new THREE.CircleGeometry(10, 20);
 
         private static materialsMap : { [color : number] : THREE.Material } = {};
         
@@ -38,11 +40,12 @@ class Node3D extends THREE.Mesh {
             }
             else if(config.quality == EQuality.HIGH) {
 
-                material = new THREE.MeshLambertMaterial({
+                material = new THREE.MeshPhongMaterial({
                     color: color,
-                    transparent: false,
-                    opacity: 0.75,
-                    wireframe: false
+                    transparent: true,
+                    opacity: 0.90,
+                    wireframe: false,
+                    shininess: 5
                 });
                 Node3D.materialsMap[color] = material;
 
@@ -59,10 +62,15 @@ class Node3D extends THREE.Mesh {
             }
             
             if(config.quality > EQuality.LOW){
-                super(Node3D.basicGeometry, material);                
+                if(config.isWebGL()){
+                    super(Node3D.basicGeometry, material);                
+                }
+                else{
+                    super(Node3D.degradedGeometry, material);
+                }
             }
             else{
-                super(Node3D.lowQualityGeometry, material);
+                super(Node3D.degradedGeometry, material);
             }
 
             this.data = data;

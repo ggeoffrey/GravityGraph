@@ -292,12 +292,13 @@ class Visualisation3D {
         var sphereBackgroundWidth = 20;
         var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
         
-        var sphereBackgroundMat = new THREE.MeshLambertMaterial({
+        var sphereBackgroundMat = new THREE.MeshPhongMaterial({
             color: 0xa0a0a0,//0x404040,
             ambient: 0xffffff,
             side: 1,
             transparent: this.config.isTransparent(),
-            opacity : this.config.opacity
+            opacity : this.config.opacity,
+            shininess: 100
         });
         var sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
 
@@ -650,15 +651,17 @@ class Visualisation3D {
         }
         
         // nodes
+        
         i = 0, len = this.nodes.length;
         var target = this.camera.position.clone().sub(this.rootObject3D.position);
         
-        if(this.config.quality == EQuality.LOW){
+        /*if(this.config.quality == EQuality.LOW){
             while(i<len){
                 this.nodes[i].lookAt(target);
                 i++;
             }
         }
+        */
         
         if(this.selectedNode){
             this.nodeSelectAnimation.update(target);
@@ -690,9 +693,7 @@ class Visualisation3D {
             this.rootObject3D.add(n);
             position.push(n.position);
         });
-        
-        //console.log(position);
-        
+                
         this.d3Instance.setNodes(position);
         
     }
@@ -716,7 +717,7 @@ class Visualisation3D {
                 this.links.push(link3D);
                 this.rootObject3D.add(link3D);
     
-                if(this.config.flow){
+                if(this.config.flow && this.config.isWebGL()){
                     var cloud = new Cloud(link3D);
                     this.clouds.push(cloud);
                     this.rootObject3D.add(cloud);
