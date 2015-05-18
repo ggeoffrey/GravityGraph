@@ -277,34 +277,36 @@ var Node3D = (function (_super) {
             material = Node3D.materialsMap[color];
         }
         else if (config.quality == 2 /* HIGH */) {
+            Node3D.OPACITY = 0.90;
             material = new THREE.MeshPhongMaterial({
                 color: color,
                 transparent: true,
-                opacity: 0.90,
+                opacity: Node3D.OPACITY,
                 wireframe: false,
                 shininess: 5
             });
             Node3D.materialsMap[color] = material;
         }
         else if (config.quality < 2 /* HIGH */) {
+            Node3D.OPACITY = 1;
             material = new THREE.MeshBasicMaterial({
                 color: color,
-                transparent: false,
-                opacity: 0.75,
+                transparent: true,
+                opacity: Node3D.OPACITY,
                 wireframe: false
             });
             Node3D.materialsMap[color] = material;
         }
         if (config.quality > 0 /* LOW */) {
             if (config.isWebGL()) {
-                _super.call(this, Node3D.basicGeometry, material);
+                _super.call(this, Node3D.basicGeometry, material.clone());
             }
             else {
-                _super.call(this, Node3D.degradedGeometry, material);
+                _super.call(this, Node3D.degradedGeometry, material.clone());
             }
         }
         else {
-            _super.call(this, Node3D.degradedGeometry, material);
+            _super.call(this, Node3D.degradedGeometry, material.clone());
         }
         this.data = data;
         this.quality = config.quality;
@@ -346,11 +348,27 @@ var Node3D = (function (_super) {
     Node3D.prototype.distanceTo = function (node) {
         return this.position.distanceTo(node.position);
     };
+    Node3D.prototype.equals = function (node) {
+        return this.getData() == node.getData();
+    };
+    Node3D.prototype.isSameGroupOf = function (node) {
+        return this.getData().group == node.getData().group;
+    };
+    // VISUAL
+    Node3D.prototype.setFocused = function () {
+        this.material.opacity = Node3D.OPACITY;
+        this.material.needsUpdate = true;
+    };
+    Node3D.prototype.setUnFocused = function () {
+        this.material.opacity = 0.25;
+        this.material.needsUpdate = true;
+    };
     Node3D.nodesColor = d3.scale.category10();
     Node3D.basicGeometry = new THREE.IcosahedronGeometry(10, 2);
     Node3D.degradedGeometry = new THREE.IcosahedronGeometry(10, 0);
     //private static lowQualityGeometry : THREE.CircleGeometry = new THREE.CircleGeometry(10, 20);
     Node3D.materialsMap = {};
+    Node3D.OPACITY = 0.90;
     return Node3D;
 })(THREE.Mesh);
 /// <reference path='headers/GravityGraphData.d.ts' />
@@ -861,6 +879,44 @@ var Visualisation3D = (function () {
     };
     Visualisation3D.prototype.on = function (name, action) {
         this.events.add(name, action);
+    };
+    //  --  Advenced methodes  --
+    Visualisation3D.prototype.focusOn = function (nodes) {
+        var _this = this;
+        nodes.forEach(function (n1) {
+            _this.nodes.forEach(function (n2) {
+                if (n2.equals(n1)) {
+                    n2.setFocused();
+                }
+                else {
+                    n2.setUnFocused();
+                }
+            });
+        });
+    };
+    Visualisation3D.prototype.resetFocus = function () {
+        this.nodes.forEach(function (node) {
+            node.setFocused();
+        });
+    };
+    Visualisation3D.prototype.focusOnRelation = function () {
+        if (this.selectedNode) {
+            this.focusOn([this.selectedNode]);
+        }
+    };
+    Visualisation3D.prototype.focusOnGroup = function () {
+        var _this = this;
+        var nodes;
+        if (this.selectedNode) {
+            this.nodes.forEach(function (node) {
+                if (node.isSameGroupOf(_this.selectedNode)) {
+                    node.setFocused();
+                }
+                else {
+                    node.setUnFocused();
+                }
+            });
+        }
     };
     return Visualisation3D;
 })();

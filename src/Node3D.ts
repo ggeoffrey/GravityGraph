@@ -15,7 +15,7 @@ class Node3D extends THREE.Mesh {
         private static materialsMap : { [color : number] : THREE.Material } = {};
         
         
-        
+        public static OPACITY = 0.90;
 
 
         private data : INodeData;
@@ -34,16 +34,18 @@ class Node3D extends THREE.Mesh {
             */
 
             var color = Node3D.nodesColor(data.group);
-            var material;
+            var material : THREE.Material;
             if (Node3D.materialsMap[color]) {
                 material = Node3D.materialsMap[color];
             }
             else if(config.quality == EQuality.HIGH) {
+                
+                Node3D.OPACITY = 0.90;
 
                 material = new THREE.MeshPhongMaterial({
                     color: color,
                     transparent: true,
-                    opacity: 0.90,
+                    opacity: Node3D.OPACITY,
                     wireframe: false,
                     shininess: 5
                 });
@@ -52,10 +54,12 @@ class Node3D extends THREE.Mesh {
             }
             else if(config.quality < EQuality.HIGH){
 
+                Node3D.OPACITY = 1;
+
                 material = new THREE.MeshBasicMaterial({
                     color: color,
-                    transparent: false,
-                    opacity: 0.75,
+                    transparent: true,
+                    opacity: Node3D.OPACITY,
                     wireframe: false
                 });
                 Node3D.materialsMap[color] = material;
@@ -63,14 +67,14 @@ class Node3D extends THREE.Mesh {
             
             if(config.quality > EQuality.LOW){
                 if(config.isWebGL()){
-                    super(Node3D.basicGeometry, material);                
+                    super(Node3D.basicGeometry, material.clone());                
                 }
                 else{
-                    super(Node3D.degradedGeometry, material);
+                    super(Node3D.degradedGeometry, material.clone());
                 }
             }
             else{
-                super(Node3D.degradedGeometry, material);
+                super(Node3D.degradedGeometry, material.clone());
             }
 
             this.data = data;
@@ -128,6 +132,28 @@ class Node3D extends THREE.Mesh {
 
         public distanceTo(node : Node3D) : number {
             return this.position.distanceTo(node.position);
+        }
+        
+        public equals(node : Node3D){
+            return this.getData() == node.getData();
+        }
+        
+        public isSameGroupOf(node : Node3D){
+            return this.getData().group == node.getData().group;
+        }
+        
+        
+        // VISUAL
+        
+        
+        public setFocused(){
+            this.material.opacity = Node3D.OPACITY;
+            this.material.needsUpdate = true;
+        }
+        
+        public setUnFocused(){
+            this.material.opacity = 0.25;
+            this.material.needsUpdate = true;
         }
 
     }

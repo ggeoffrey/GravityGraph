@@ -735,5 +735,52 @@ class Visualisation3D {
     
     
     
+    
+    
+    //  --  Advenced methodes  --
+    
+    
+    private focusOn(nodes : Array<Node3D>){
+        nodes.forEach((n1)=>{
+          this.nodes.forEach((n2)=>{
+                if(n2.equals(n1)){
+                    n2.setFocused();
+                }  
+                else{
+                    n2.setUnFocused();
+                }
+          });
+        });
+    }
+    private resetFocus(){
+        this.nodes.forEach((node) => {
+            node.setFocused();
+        });
+    }
+    
+    public focusOnRelation(){
+        if(this.selectedNode){
+            this.focusOn([this.selectedNode]);
+        }
+    }
+    
+    public focusOnGroup(){
+        var nodes : Array<Node3D>;
+        
+        if(this.selectedNode){
+           this.nodes.forEach((node) => {
+               if(node.isSameGroupOf(this.selectedNode)){
+                   node.setFocused();
+               }
+               else{
+                   node.setUnFocused();                   
+               }
+           });
+        }
+        
+    }
+    
+    
+    
 
 }
