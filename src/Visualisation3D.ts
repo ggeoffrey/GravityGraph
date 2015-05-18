@@ -6,11 +6,13 @@
 /// <reference path='headers/three-projector.d.ts' />
 
 /// <reference path='headers/d3.d.ts' />
+/// <reference path='headers/tweenjs.d.ts' />
 
 /// <reference path='Node3D.ts' />
 /// <reference path='Link3D.ts' />
 /// <reference path='Cloud.ts' />
 /// <reference path='NodeSelectAnimation.ts' />
+
 
 
 /// <reference path="D3Wrapper.ts" />
@@ -373,10 +375,12 @@ class Visualisation3D {
 
 
         this.intersectPlane = new THREE.Mesh(
-            new THREE.PlaneBufferGeometry( 2000, 2000, 8, 8 ),
-            new THREE.MeshBasicMaterial( { color: 0x000000, opacity: 0.25, transparent: true } )
+            new THREE.PlaneBufferGeometry( 10, 10, 2, 2 ),
+            new THREE.MeshBasicMaterial( { color: 0x202020, opacity: 0.75, transparent: false } )
         );
-        this.intersectPlane.visible = false;
+        this.intersectPlane.visible = false;        
+        this.intersectPlane.scale.set(1000,1000,1000);
+        
         this.scene.add( this.intersectPlane );
 
 
@@ -473,7 +477,8 @@ class Visualisation3D {
             this.isAClick = false;
             clearTimeout(this.dragTimout);
         }
-        else{
+        
+        
             var target = this.getTargetObject();
     
             if ( target ) {
@@ -491,10 +496,11 @@ class Visualisation3D {
                     this.canvas.style.cursor = 'move';
     
                     this.d3Instance.shake();
+                    this.d3Instance.calmDown();
                     
                 }, 150);
            }            
-        }
+        
     }
 
     private onDocumentMouseUp(event : MouseEvent){
@@ -510,7 +516,7 @@ class Visualisation3D {
             }
             else{
                 this.d3Instance.shake();
-            }
+            }            
             
             this.currentlySelectedObject = null;
             
@@ -529,6 +535,8 @@ class Visualisation3D {
     
     
     private selectNode( node : Node3D, event? : MouseEvent ) : void {
+        
+        
         if(event){
             this.events.emit('nodeSelected', [event, node.getData()]);
         }
@@ -584,7 +592,9 @@ class Visualisation3D {
         if (intersects.length>0) {
             return intersects[0];
         }
-        return null;
+        else{
+            return null;
+        }
     }
     
     
@@ -651,6 +661,8 @@ class Visualisation3D {
     
     
     public setNodes( nodes : Array<any> ){
+        
+        
         
         this.nodes = [];
         

@@ -1,6 +1,7 @@
 /// <reference path='headers/GravityGraphData.d.ts' />
 
 /// <reference path='headers/three.d.ts' />
+/// <reference path='headers/tweenjs.d.ts' />
 
 class NodeSelectAnimation extends THREE.Line {
 	

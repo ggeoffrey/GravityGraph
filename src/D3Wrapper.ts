@@ -78,11 +78,15 @@ class D3Wrapper{
 		return this.force.alpha() <= 1e-2;
 	}
 	
+	public isCalm(){
+		return this.force.alpha() <= 1e-1;
+	}
 	
-	public stabilize(){
+	
+	public stabilize( limit = 150 ){
 		this.idle = true;
 		var k = 0;
-        while ((!this.isStable()) && (k < 150)) {
+        while ((!this.isStable()) && (k < limit)) {
         	this.force.tick(),
         	k = k + 1;
         }
@@ -90,17 +94,26 @@ class D3Wrapper{
 		this.force.tick();
 	}
 	
+	public calmDown(){
+		this.stabilize(50);
+	}
+	
 	public shake(){
 		this.force.start();
 	}
+	
 	
     private tick() {
 
         this.working = true;
 		
-		if(!this.idle){
+		if(!this.isCalm){
+			this.force.tick();
+		}
+		else if(!this.idle){
 			this.events.emit("tick", []);
 		}
+		
 		
     }
 	
