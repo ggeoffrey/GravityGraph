@@ -1,14 +1,7 @@
 /// <reference path='headers/GravityGraphData.d.ts' />
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
 /// <reference path='headers/three.d.ts' />
 /// <reference path="Arrow3D.ts" />
-var Link3D = (function (_super) {
-    __extends(Link3D, _super);
+var Link3D = (function () {
     function Link3D(source, target, data) {
         this.data = {
             source: data.source,
@@ -16,16 +9,7 @@ var Link3D = (function (_super) {
         };
         this.source = source;
         this.target = target;
-        var geometry = new THREE.Geometry();
-        geometry.vertices.push(source.position);
-        geometry.vertices.push(target.position);
-        _super.call(this, geometry, Link3D.defaultMaterial);
-        this.changeDefaults();
     }
-    Link3D.prototype.changeDefaults = function () {
-        this.castShadow = true;
-        this.position = this.source.position;
-    };
     Link3D.prototype.getData = function () {
         return this.data;
     };
@@ -49,7 +33,6 @@ var Link3D = (function (_super) {
     };
     Link3D.prototype.update = function () {
         this.lineLength = this.source.distanceTo(this.target);
-        this.geometry.verticesNeedUpdate = true;
         if (this.cloud) {
             this.cloud.update();
         }
@@ -57,21 +40,24 @@ var Link3D = (function (_super) {
     };
     // VIEW
     Link3D.prototype.setFocused = function () {
-        this.visible = true;
-        this.cloud.visible = true;
+        if (this.cloud)
+            this.cloud.visible = true;
         this.arrow.setFocused();
     };
     Link3D.prototype.setUnFocused = function () {
-        this.visible = false;
-        this.cloud.visible = false;
+        if (this.cloud)
+            this.cloud.visible = false;
         this.arrow.setUnFocused();
     };
-    Link3D.defaultMaterial = new THREE.LineBasicMaterial({
-        color: 0x909090
-    });
     return Link3D;
-})(THREE.Line);
+})();
 /// <reference path='headers/GravityGraphData.d.ts' />
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
 /// <reference path='headers/three.d.ts' />
 var Node3D = (function (_super) {
     __extends(Node3D, _super);
@@ -233,8 +219,8 @@ var Cloud = (function (_super) {
     Cloud.prototype.changeDefaults = function () {
     };
     Cloud.prototype.update = function () {
-        this.position.copy(this.support.geometry.vertices[0]);
-        this.lookAt(this.support.geometry.vertices[1]);
+        this.position.copy(this.support.getSource().position);
+        this.lookAt(this.support.getTarget().position);
     };
     Cloud.prototype.start = function () {
         if (this.velocity < Cloud.baseVelocity) {
@@ -471,6 +457,17 @@ var D3Wrapper = (function () {
             this.events.emit("tick", []);
         }
     };
+    // VISUAL
+    D3Wrapper.prototype.setDistance = function (distance) {
+        this.force.linkDistance(distance);
+        this.shake();
+        //this.calmDown();
+    };
+    D3Wrapper.prototype.setCharge = function (charge) {
+        this.force.charge(charge);
+        this.shake();
+        //this.calmDown();
+    };
     return D3Wrapper;
 })();
 /// <reference path='headers/GravityGraphData.d.ts' />
@@ -581,25 +578,12 @@ var Visualisation3D = (function () {
     }
     Visualisation3D.prototype.listenToD3 = function () {
         var _this = this;
-        var nbTicks = 0;
         this.d3Instance.on("tick", function () {
-            // every X ticks
-            if (nbTicks % 50 === 0) {
-                var i = 0, len = _this.links.length;
-                while (i < len) {
-                    _this.links[i].geometry.computeBoundingSphere(); // avoid disappearing
-                    _this.links[i].update();
-                    i++;
-                }
+            var i = 0, len = _this.links.length;
+            while (i < len) {
+                _this.links[i].update();
+                i++;
             }
-            else {
-                var i = 0, len = _this.links.length;
-                while (i < len) {
-                    _this.links[i].update();
-                    i++;
-                }
-            }
-            nbTicks++;
             // on stabilisation
             if (_this.d3Instance.isStable()) {
                 _this.d3Working = false;
@@ -670,7 +654,7 @@ var Visualisation3D = (function () {
     Visualisation3D.prototype.addBackground = function () {
         var sphereBackgroundWidth = 20;
         var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
-        var sphereBackgroundMat = new THREE.MeshPhongMaterial({
+        var sphereBackgroundMat = new THREE.MeshLambertMaterial({
             color: 0xa0a0a0,
             ambient: 0xffffff,
             side: 1,
@@ -1075,6 +1059,14 @@ var GravityGraph = (function () {
     GravityGraph.prototype.resume = function () {
         this.paused = false;
     };
+    // setters
+    GravityGraph.prototype.setCharge = function (charge) {
+        this.force.setCharge(charge);
+    };
+    GravityGraph.prototype.setDistance = function (distance) {
+        this.force.setDistance(distance);
+    };
+    // main loop
     GravityGraph.prototype.update = function () {
         this.vis3D.update();
     };

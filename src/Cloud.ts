@@ -60,8 +60,8 @@ class Cloud extends THREE.PointCloud{
         }
 
         public update(){
-            this.position.copy(this.support.geometry.vertices[0]);
-            this.lookAt(this.support.geometry.vertices[1]);
+            this.position.copy(this.support.getSource().position);
+            this.lookAt(this.support.getTarget().position);
         }
 
 

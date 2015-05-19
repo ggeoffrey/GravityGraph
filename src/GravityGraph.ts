@@ -185,7 +185,22 @@ class GravityGraph {
     public resume():void {
         this.paused = false;
     }
+    
+    
+    // setters
+    
+    
 
+    public setCharge(charge : number){
+        this.force.setCharge(charge);
+    }
+    
+    public setDistance(distance : number){
+        this.force.setDistance(distance);
+    }
+    
+    
+    // main loop
 
     private update():void {
         this.vis3D.update();            
@@ -194,6 +209,8 @@ class GravityGraph {
     private render():void {
         this.vis3D.render();
     }
+    
+    
 
 
     // D3

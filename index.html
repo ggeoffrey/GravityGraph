@@ -24,6 +24,11 @@
         <button onclick="gravityGraph.focusOnGroup()">
             Show group relations
         </button>
+        Charge : <input id="charge" type="range" min="-150" max="10" step="1" onchange="changeCharge(this.value);"/>
+         <span id="chargeVal"></span>
+        
+         Distance : <input id="distance" type="range" min="-10" max="200" step="1" onchange="changeDistance(this.value);"/>
+         <span id="distanceVal"></span>
     </div>
 
     <div id="tooltip"></div>
@@ -52,9 +57,9 @@
             target : 'dev-canvas',
             //opacity: 0,
             //backgroundColor : 0xffffff,
-            quality : "low",
+            quality : "high",
             flat : false,
-            flow : true,
+            flow : false,
             stats : true
         });
         
@@ -88,6 +93,26 @@
                 gravityGraph.start();
             }
         });
+        
+        
+        function changeCharge(val) {
+            gravityGraph.setCharge(val);
+            
+            document.getElementById('charge').value = val;
+            document.getElementById('chargeVal').innerText = val;
+                        
+        }
+        
+        function changeDistance(val) {
+            gravityGraph.setDistance(val);
+            
+            document.getElementById('distance').value = val;
+            document.getElementById('distanceVal').innerText = val;
+                        
+        }
+        
+        changeCharge(-100);
+        changeDistance(60);
         
         
     </script>

@@ -67,13 +67,12 @@ class Link3D implements IFocusableElement {
     
     
     public setFocused(){
-
-        this.cloud.visible = true;
+        if(this.cloud)  this.cloud.visible = true;
         this.arrow.setFocused(); 
     }
     
     public setUnFocused(){
-        this.cloud.visible = false;
+        if(this.cloud)  this.cloud.visible = false;
         this.arrow.setUnFocused();        
     }
 

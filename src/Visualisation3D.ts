@@ -156,29 +156,14 @@ class Visualisation3D {
     
     private listenToD3(){
         
-        var nbTicks : number = 0;
+        
         this.d3Instance.on("tick", ()=>{
-            
-            
-            // every X ticks
-            if(nbTicks % 50 === 0){
-                var i = 0, len = this.links.length;
-                while (i < len) {
-                    this.links[i].geometry.computeBoundingSphere(); // avoid disappearing
-                    this.links[i].update();
-                    i++;
-                }
+                
+            var i = 0, len = this.links.length;
+            while (i < len) {
+                this.links[i].update();
+                i++;
             }
-            else{  // every tick
-                var i = 0, len = this.links.length;
-                while (i < len) {
-                    this.links[i].update();
-                    i++;
-                }
-    
-            }
-            nbTicks++;
-            
             
             // on stabilisation
             if(this.d3Instance.isStable()){
@@ -292,7 +277,7 @@ class Visualisation3D {
         var sphereBackgroundWidth = 20;
         var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
         
-        var sphereBackgroundMat = new THREE.MeshPhongMaterial({
+        var sphereBackgroundMat = new THREE.MeshLambertMaterial({
             color: 0xa0a0a0,//0x404040,
             ambient: 0xffffff,
             side: 1,

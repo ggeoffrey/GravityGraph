@@ -118,4 +118,21 @@ class D3Wrapper{
     }
 	
 	
+	// VISUAL
+	
+	public setDistance(distance : number){
+		this.force.linkDistance(distance);
+		this.shake();
+		//this.calmDown();
+	}
+	
+	public setCharge(charge : number){
+		this.force.charge(charge);
+		this.shake();
+		//this.calmDown();
+	}
+	
+	
+	
+	
 }
