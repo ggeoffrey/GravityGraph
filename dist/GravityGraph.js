@@ -486,26 +486,51 @@ var NodeSelectAnimation = (function (_super) {
         }
         _super.call(this, geometry, material);
         this.changeDefaults();
-        this.animatedObject = { scale: 0 };
-        this.animation = new createjs.Tween(this.animatedObject, {
-            loop: true,
-        }).to({
-            scale: 100
-        }, 1000);
     }
     NodeSelectAnimation.prototype.changeDefaults = function () {
         this.scale.set(1, 1, 1);
-        this.material.opacity = 0;
+        this.visible = false;
+    };
+    NodeSelectAnimation.prototype.animate = function () {
+        var _this = this;
+        //createjs.Tween.removeTweens(this.animatedObject);
+        this.firstExpand = true;
+        this.material.opacity = 1;
+        this.material.needsUpdate = true;
+        this.animatedObject = { scale: 0 };
+        this.animation = new createjs.Tween(this.animatedObject).to({
+            scale: 3000
+        }, 1000).call(function () {
+            //createjs.Tween.removeTweens(this.animatedObject);
+            _this.firstExpand = false;
+            _this.animatedObject = { scale: 0 };
+            _this.animation = new createjs.Tween(_this.animatedObject, {
+                loop: true,
+            }).to({
+                scale: 100
+            }, 1000);
+        });
     };
     NodeSelectAnimation.prototype.update = function (target) {
-        var s = this.animatedObject.scale / 100;
-        this.scale.set(s, s, s);
-        this.material.opacity = 1 - s;
-        this.material.needsUpdate = true;
-        this.lookAt(target);
+        if (this.animatedObject.scale !== undefined) {
+            var s = this.animatedObject.scale / 100;
+            this.scale.set(s, s, s);
+            if (!this.firstExpand) {
+                var opacity = Math.sin(1 - s);
+                this.material.opacity = opacity;
+                this.material.needsUpdate = true;
+            }
+            this.lookAt(target);
+        }
     };
     NodeSelectAnimation.prototype.setPosition = function (position) {
         this.position.copy(position);
+    };
+    NodeSelectAnimation.prototype.show = function () {
+        this.visible = true;
+    };
+    NodeSelectAnimation.prototype.hide = function () {
+        this.visible = false;
     };
     return NodeSelectAnimation;
 })(THREE.Line);
@@ -819,11 +844,17 @@ var Visualisation3D = (function () {
         }
         node.selected = true;
         this.selectedNode = node;
-        this.nodeSelectAnimation.position.copy(node.position);
+        this.nodeSelectAnimation.setPosition(node.position);
+        this.nodeSelectAnimation.show();
+        this.nodeSelectAnimation.animate();
     };
     Visualisation3D.prototype.unselectNode = function (node) {
-        node.selected = false;
-        this.selectedNode = null;
+        if (node === void 0) { node = this.selectedNode; }
+        if (node) {
+            node.selected = false;
+            this.selectedNode = null;
+            this.nodeSelectAnimation.hide();
+        }
     };
     Visualisation3D.prototype.getPlanIntersect = function () {
         var vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 0.5);
@@ -1108,6 +1139,18 @@ var GravityGraph = (function () {
         this.events.add(name, action);
     };
     //  --  Advenced methods  --
+    GravityGraph.prototype.selectBy = function (idkey, value) {
+        for (var i = 0; i < this.nodes.length; i++) {
+            var node = this.nodes[i];
+            if (node.getData()[idkey] === value) {
+                this.vis3D.selectNode(node);
+                break;
+            }
+        }
+    };
+    GravityGraph.prototype.unSelect = function () {
+        this.vis3D.unselectNode();
+    };
     GravityGraph.prototype.resetFocus = function () {
         this.nodes.forEach(function (node) {
             node.setFocused();

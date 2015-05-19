@@ -279,6 +279,22 @@ class GravityGraph {
     
     //  --  Advenced methods  --
     
+    
+    
+    public selectBy(idkey : string, value : any) : void {
+        for (var i = 0; i < this.nodes.length; i++) {
+            var node = this.nodes[i];
+            if(node.getData()[idkey] === value){
+                this.vis3D.selectNode(node);
+                break;
+            }
+        }
+    }
+    
+    public unSelect() : void {
+        this.vis3D.unselectNode();
+    }
+    
 
     private resetFocus(){
         this.nodes.forEach((node) => {

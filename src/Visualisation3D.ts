@@ -544,7 +544,7 @@ class Visualisation3D {
     
     
     
-    private selectNode( node : Node3D, event? : MouseEvent ) : void {
+    public selectNode( node : Node3D, event? : MouseEvent ) : void {
         
         
         if(event){
@@ -558,13 +558,18 @@ class Visualisation3D {
         node.selected = true;
         this.selectedNode = node;
         
-        this.nodeSelectAnimation.position.copy(node.position);
+        this.nodeSelectAnimation.setPosition(node.position);
+        this.nodeSelectAnimation.show();
+        this.nodeSelectAnimation.animate();
         
     }
     
-    private unselectNode( node : Node3D ) : void {
-        node.selected = false;
-        this.selectedNode = null;
+    public unselectNode( node = this.selectedNode ) : void {
+        if(node){
+            node.selected = false;
+            this.selectedNode = null;
+            this.nodeSelectAnimation.hide();
+        }
     }
     
     
