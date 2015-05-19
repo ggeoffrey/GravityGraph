@@ -272,11 +272,24 @@ class GravityGraph {
         });
     }
     
-    public focusOnRelations(){
-        if(this.vis3D.getSelectedNode()){
-            var relations = this.getRelationsOf(this.vis3D.getSelectedNode());
+    public focusOnRelations(nodes ? : Array<Node3D>){
+        var relations : IGraph = {
+            nodes : [],
+            links : []
+        };
+        
+        if(!nodes && this.vis3D.getSelectedNode()){
+            relations = this.getRelationsOf(this.vis3D.getSelectedNode());
+        }
+        else if (nodes){
+            nodes.forEach((node)=>{
+                var rel = this.getRelationsOf(node);
+                relations.nodes = relations.nodes.concat(rel.nodes);
+                relations.links = relations.links.concat(rel.links);
+            });
+        }
+        if(relations.nodes){            
             
-            console.log(relations);
             this.nodes.forEach((node)=>{
                if(relations.nodes.indexOf(node) != -1){
                    node.setFocused();
@@ -297,17 +310,23 @@ class GravityGraph {
     }
     
     public focusOnGroup(){
-        var nodes : Array<Node3D>;
+        var nodes : Array<Node3D> = [];
         
         if(this.vis3D.getSelectedNode()){
+                        
            this.nodes.forEach((node) => {
                if(node.isSameGroupOf(this.vis3D.getSelectedNode())){
                    node.setFocused();
+                   nodes.push(node);
                }
                else{
                    node.setUnFocused();
                }
            });
+           
+           if(nodes){
+               this.focusOnRelations(nodes);
+           }
         }
         
     }

@@ -5,10 +5,13 @@
 /// <reference path="Node3D.ts" />
 
 
-class Arrow3D extends THREE.ArrowHelper{
+class Arrow3D extends THREE.ArrowHelper implements IFocusableElement{
+	
+	
+	private static COLOR = 0xffffff;//0x909090;
 	
 	private sourcePosition : THREE.Vector3;
-	private targetPosition : THREE.Vector3;
+	private targetPosition : THREE.Vector3;	
 	
 	
 	constructor(link : Link3D){
@@ -16,14 +19,13 @@ class Arrow3D extends THREE.ArrowHelper{
 		this.targetPosition = link.getTarget().position;
 		
 		var direction = this.targetPosition.clone().sub(this.sourcePosition);
-		super(direction.clone().normalize(), this.sourcePosition, direction.length(), 0x00ff00);
+		super(direction.clone().normalize(), this.sourcePosition, direction.length(), Arrow3D.COLOR);
 		this.changeDefaults()
 		link.setArrow(this);
 	}
 	
 	private changeDefaults(){
 		this.position = this.sourcePosition;
-		
 	}
 	
 	
@@ -36,4 +38,15 @@ class Arrow3D extends THREE.ArrowHelper{
 		this.position.copy(this.sourcePosition.clone().add(toAdd));
 		this.setLength(length*0.9);
 	}
+	
+	public setFocused(){
+		this.line.visible = true;
+        this.cone.visible = true;
+	}
+	
+	public setUnFocused(){
+		this.line.visible = false;
+        this.cone.visible = false;
+	}
+	
 }

@@ -292,7 +292,7 @@ class Visualisation3D {
         var sphereBackgroundWidth = 20;
         var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
         
-        var sphereBackgroundMat = new THREE.MeshLambertMaterial({
+        var sphereBackgroundMat = new THREE.MeshPhongMaterial({
             color: 0xa0a0a0,//0x404040,
             ambient: 0xffffff,
             side: 1,
@@ -725,9 +725,8 @@ class Visualisation3D {
                 
                 var link3D = new Link3D(source, target, link);
                 this.links.push(link3D);
-                //this.rootObject3D.add(link3D);
     
-                if(this.config.flow && this.config.isWebGL()){
+                if(this.config.flow && this.config.isWebGL() && this.config.quality > EQuality.LOW){
                     var cloud = new Cloud(link3D);
                     this.clouds.push(cloud);
                     this.rootObject3D.add(cloud);

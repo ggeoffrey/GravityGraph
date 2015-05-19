@@ -58,19 +58,13 @@ var Link3D = (function (_super) {
     // VIEW
     Link3D.prototype.setFocused = function () {
         this.visible = true;
-        this.arrow.line.visible = true;
-        this.arrow.line.material.opacity = 1;
-        this.arrow.line.material.needsUpdate = true;
-        this.arrow.cone.material.opacity = 1;
-        this.arrow.cone.material.needsUpdate = true;
+        this.cloud.visible = true;
+        this.arrow.setFocused();
     };
     Link3D.prototype.setUnFocused = function () {
         this.visible = false;
-        this.arrow.line.visible = false;
-        this.arrow.line.material.opacity = 0;
-        this.arrow.line.material.needsUpdate = true;
-        this.arrow.cone.material.opacity = 0;
-        this.arrow.cone.material.needsUpdate = true;
+        this.cloud.visible = false;
+        this.arrow.setUnFocused();
     };
     Link3D.defaultMaterial = new THREE.LineBasicMaterial({
         color: 0x909090
@@ -178,7 +172,7 @@ var Node3D = (function (_super) {
         this.material.opacity = 0.375;
         this.material.needsUpdate = true;
     };
-    Node3D.nodesColor = d3.scale.category10();
+    Node3D.nodesColor = d3.scale.category20();
     Node3D.basicGeometry = new THREE.IcosahedronGeometry(10, 2);
     Node3D.degradedGeometry = new THREE.IcosahedronGeometry(10, 0);
     //private static lowQualityGeometry : THREE.CircleGeometry = new THREE.CircleGeometry(10, 20);
@@ -195,7 +189,7 @@ var Arrow3D = (function (_super) {
         this.sourcePosition = link.getSource().position;
         this.targetPosition = link.getTarget().position;
         var direction = this.targetPosition.clone().sub(this.sourcePosition);
-        _super.call(this, direction.clone().normalize(), this.sourcePosition, direction.length(), 0x00ff00);
+        _super.call(this, direction.clone().normalize(), this.sourcePosition, direction.length(), Arrow3D.COLOR);
         this.changeDefaults();
         link.setArrow(this);
     }
@@ -210,6 +204,15 @@ var Arrow3D = (function (_super) {
         this.position.copy(this.sourcePosition.clone().add(toAdd));
         this.setLength(length * 0.9);
     };
+    Arrow3D.prototype.setFocused = function () {
+        this.line.visible = true;
+        this.cone.visible = true;
+    };
+    Arrow3D.prototype.setUnFocused = function () {
+        this.line.visible = false;
+        this.cone.visible = false;
+    };
+    Arrow3D.COLOR = 0xffffff; //0x909090;
     return Arrow3D;
 })(THREE.ArrowHelper);
 /// <reference path='headers/GravityGraphData.d.ts' />
@@ -495,7 +498,7 @@ var NodeSelectAnimation = (function (_super) {
     }
     NodeSelectAnimation.prototype.changeDefaults = function () {
         this.scale.set(1, 1, 1);
-        this.material.opacity = 1;
+        this.material.opacity = 0;
     };
     NodeSelectAnimation.prototype.update = function (target) {
         var s = this.animatedObject.scale / 100;
@@ -667,7 +670,7 @@ var Visualisation3D = (function () {
     Visualisation3D.prototype.addBackground = function () {
         var sphereBackgroundWidth = 20;
         var sphereBackgroundGeo = new THREE.SphereGeometry(sphereBackgroundWidth, sphereBackgroundWidth, sphereBackgroundWidth);
-        var sphereBackgroundMat = new THREE.MeshLambertMaterial({
+        var sphereBackgroundMat = new THREE.MeshPhongMaterial({
             color: 0xa0a0a0,
             ambient: 0xffffff,
             side: 1,
@@ -928,8 +931,7 @@ var Visualisation3D = (function () {
                 var target = _this.nodes[link.target];
                 var link3D = new Link3D(source, target, link);
                 _this.links.push(link3D);
-                //this.rootObject3D.add(link3D);
-                if (_this.config.flow && _this.config.isWebGL()) {
+                if (_this.config.flow && _this.config.isWebGL() && _this.config.quality > 0 /* LOW */) {
                     var cloud = new Cloud(link3D);
                     _this.clouds.push(cloud);
                     _this.rootObject3D.add(cloud);
@@ -1122,10 +1124,23 @@ var GravityGraph = (function () {
             link.setFocused();
         });
     };
-    GravityGraph.prototype.focusOnRelations = function () {
-        if (this.vis3D.getSelectedNode()) {
-            var relations = this.getRelationsOf(this.vis3D.getSelectedNode());
-            console.log(relations);
+    GravityGraph.prototype.focusOnRelations = function (nodes) {
+        var _this = this;
+        var relations = {
+            nodes: [],
+            links: []
+        };
+        if (!nodes && this.vis3D.getSelectedNode()) {
+            relations = this.getRelationsOf(this.vis3D.getSelectedNode());
+        }
+        else if (nodes) {
+            nodes.forEach(function (node) {
+                var rel = _this.getRelationsOf(node);
+                relations.nodes = relations.nodes.concat(rel.nodes);
+                relations.links = relations.links.concat(rel.links);
+            });
+        }
+        if (relations.nodes) {
             this.nodes.forEach(function (node) {
                 if (relations.nodes.indexOf(node) != -1) {
                     node.setFocused();
@@ -1146,16 +1161,20 @@ var GravityGraph = (function () {
     };
     GravityGraph.prototype.focusOnGroup = function () {
         var _this = this;
-        var nodes;
+        var nodes = [];
         if (this.vis3D.getSelectedNode()) {
             this.nodes.forEach(function (node) {
                 if (node.isSameGroupOf(_this.vis3D.getSelectedNode())) {
                     node.setFocused();
+                    nodes.push(node);
                 }
                 else {
                     node.setUnFocused();
                 }
             });
+            if (nodes) {
+                this.focusOnRelations(nodes);
+            }
         }
     };
     // SEARCH / SORT

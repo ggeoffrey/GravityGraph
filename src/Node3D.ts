@@ -5,7 +5,7 @@
 
 class Node3D extends THREE.Mesh implements IFocusableElement {
 
-        private static nodesColor = d3.scale.category10();
+        private static nodesColor = d3.scale.category20();
 
         private static basicGeometry : THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(10, 2);
         private static degradedGeometry : THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(10, 0);

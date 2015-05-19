@@ -47,7 +47,7 @@ class NodeSelectAnimation extends THREE.Line {
 	
 	private changeDefaults(){
 		this.scale.set(1,1,1);
-		this.material.opacity = 1;
+		this.material.opacity = 0;
 	}
 	
 	

@@ -8,23 +8,18 @@
 
 
 
-class Link3D extends THREE.Line implements IFocusableElement {
-
-    private static defaultMaterial:THREE.LineBasicMaterial = new THREE.LineBasicMaterial({
-        color : 0x909090
-    });
-
+class Link3D implements IFocusableElement {
+    private data : ILinkData;
 
     private source : Node3D;
     private target : Node3D;
     
-    private data : ILinkData;
+    private lineLength: number;
+
 
     private cloud : Cloud;
-
-    private lineLength: number;
-    
     private arrow : Arrow3D;
+    
 
     constructor(source:Node3D, target:Node3D, data: ILinkData) {
 
@@ -35,24 +30,8 @@ class Link3D extends THREE.Line implements IFocusableElement {
 
         this.source = source;
         this.target = target;
-
-        var geometry = new THREE.Geometry();
-        geometry.vertices.push(source.position);
-        geometry.vertices.push(target.position);
-
-        super(geometry, Link3D.defaultMaterial);
-
+    }
         
-
-        this.changeDefaults();
-    }
-
-    private changeDefaults() {
-        this.castShadow = true;
-        this.position = this.source.position;
-    }
-    
-    
     public getData(){
         return this.data;
     }
@@ -76,7 +55,7 @@ class Link3D extends THREE.Line implements IFocusableElement {
 
     public update(){
         this.lineLength = this.source.distanceTo(this.target);
-        this.geometry.verticesNeedUpdate = true;
+
         if(this.cloud){
             this.cloud.update();
         }
@@ -88,21 +67,14 @@ class Link3D extends THREE.Line implements IFocusableElement {
     
     
     public setFocused(){
-        this.visible = true;
-        this.arrow.line.visible = true;
-        this.arrow.line.material.opacity = 1;
-        this.arrow.line.material.needsUpdate = true; 
-        this.arrow.cone.material.opacity = 1;
-        this.arrow.cone.material.needsUpdate = true; 
+
+        this.cloud.visible = true;
+        this.arrow.setFocused(); 
     }
     
     public setUnFocused(){
-        this.visible = false;
-        this.arrow.line.visible = false;
-        this.arrow.line.material.opacity = 0;
-        this.arrow.line.material.needsUpdate = true;
-        this.arrow.cone.material.opacity = 0;
-        this.arrow.cone.material.needsUpdate = true;
+        this.cloud.visible = false;
+        this.arrow.setUnFocused();        
     }
 
 }
