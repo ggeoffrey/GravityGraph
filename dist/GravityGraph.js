@@ -654,6 +654,7 @@ var NodeSelectAnimation = (function (_super) {
 /// <reference path='Events.ts' />
 var Visualisation3D = (function () {
     function Visualisation3D(config, d3instance) {
+        this.zeroVect = new THREE.Vector3();
         this.config = config;
         this.d3Instance = d3instance;
         this.events = new Events();
@@ -822,7 +823,7 @@ var Visualisation3D = (function () {
         this.controls.zoomSpeed = 1.2;
         this.controls.panSpeed = 0.8;
         this.controls.noZoom = false;
-        this.controls.noPan = this.config.isFlat();
+        this.controls.noPan = false; //this.config.isFlat();
         this.controls.staticMoving = true;
         this.controls.dynamicDampingFactor = 0.3;
     };
@@ -1013,6 +1014,16 @@ var Visualisation3D = (function () {
         this.d3Instance.shake();
     };
     Visualisation3D.prototype.update = function () {
+        //camera
+        if (this.lastCameraPosition == undefined) {
+            this.lastCameraPosition = this.camera.position.clone();
+        }
+        else if (this.camera.position.distanceTo(this.zeroVect) > 4100) {
+            this.camera.position.copy(this.lastCameraPosition);
+        }
+        else {
+            this.lastCameraPosition.copy(this.camera.position);
+        }
         // clouds
         var i = 0, len = this.clouds.length;
         while (i < len) {

@@ -31,6 +31,7 @@ class Visualisation3D {
     private scene:THREE.Scene;
     private renderer:THREE.WebGLRenderer;
     private camera:THREE.Camera;
+    private lastCameraPosition : THREE.Vector3; private zeroVect = new THREE.Vector3();
 
     private controls:THREE.OrbitControls;
 
@@ -327,7 +328,7 @@ class Visualisation3D {
         this.controls.zoomSpeed = 1.2;
         (<any> this.controls).panSpeed = 0.8;
         this.controls.noZoom = false;
-        this.controls.noPan = this.config.isFlat();
+        this.controls.noPan = false; //this.config.isFlat();
         ( <any> this.controls).staticMoving = true;
         ( <any> this.controls).dynamicDampingFactor = 0.3;
     }
@@ -657,7 +658,21 @@ class Visualisation3D {
         this.d3Instance.shake();
     }
     
+    
     public update(){
+        
+        //camera
+        if(this.lastCameraPosition == undefined){
+            this.lastCameraPosition = this.camera.position.clone();
+        }
+        else if(this.camera.position.distanceTo(this.zeroVect) > 4100){
+            this.camera.position.copy(this.lastCameraPosition);
+        }
+        else {
+            this.lastCameraPosition.copy(this.camera.position);
+        }
+        
+        
         
         // clouds
         var i = 0, len = this.clouds.length;
