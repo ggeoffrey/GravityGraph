@@ -3,6 +3,9 @@
 /// <reference path='three-orbitcontrols.d.ts' />
 /// <reference path='three-projector.d.ts' />
 
+declare enum EQuality{}
+
+
 interface IWorker extends Worker{
     postMessage(message : IWorkerMessaqe, rest? : any) : void;
 }
@@ -38,6 +41,9 @@ interface IOptions{
     flat? : boolean;
     flow? : boolean;
     stats? : boolean;
+    charge? : number;
+    distance? : number;
+    colorType : string;
 }
 
 

@@ -1,11 +1,13 @@
 /// <reference path='headers/GravityGraphData.d.ts' />
 
 /// <reference path='headers/three.d.ts' />
+/// <reference path='headers/d3.d.ts' />
+/// <reference path='Utils.ts' />
 
 
 class Node3D extends THREE.Mesh implements IFocusableElement {
 
-        private static nodesColor = d3.scale.category20();
+        private static nodesColor;
 
         private static basicGeometry : THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(10, 2);
         private static degradedGeometry : THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(10, 0);
@@ -32,6 +34,10 @@ class Node3D extends THREE.Mesh implements IFocusableElement {
                 var material = ?
                 var geometry = ?
             */
+            
+            if(!Node3D.nodesColor){
+                Node3D.nodesColor = config.colorBuilder;
+            }
 
             var color = Node3D.nodesColor(data.group);
             var material : THREE.Material;

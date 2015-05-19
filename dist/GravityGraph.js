@@ -51,6 +51,156 @@ var Link3D = (function () {
     };
     return Link3D;
 })();
+/**
+* Created by Geoffrey on 5/10/2015.
+*/
+/// <reference path="headers/Detector.d.ts" />
+/// <reference path="headers/d3.d.ts" />
+/// <reference path="headers/GravityGraphData.d.ts" />
+var EQuality;
+(function (EQuality) {
+    EQuality[EQuality["LOW"] = 0] = "LOW";
+    EQuality[EQuality["MEDIUM"] = 1] = "MEDIUM";
+    EQuality[EQuality["HIGH"] = 2] = "HIGH";
+})(EQuality || (EQuality = {}));
+var Utils = (function () {
+    function Utils() {
+    }
+    Utils.prototype.isNumeric = function (item) {
+        return !isNaN(parseFloat(item));
+    };
+    Utils.prototype.parseBoolean = function (item) {
+        var ret = !!item;
+        if (item == "true") {
+            ret = true;
+        }
+        else if (item == "false") {
+            ret = false;
+        }
+        return ret;
+    };
+    return Utils;
+})();
+var Options = (function () {
+    function Options(config) {
+        this.U = new Utils();
+        this._config = config;
+        this.webglAvailable = Detector.webgl;
+        if (this.quality > 1 /* MEDIUM */ && !this.isWebGL()) {
+            this._config.quality = "medium";
+            console.warn("Degraded mode ! (slower)");
+            console.warn("WebGL is disabled, your drivers, your DirectX version or your browser are outdated.");
+            console.warn("Please update your software.  (https://get.webgl.org/)");
+        }
+    }
+    Object.defineProperty(Options.prototype, "target", {
+        get: function () {
+            return this._config.target;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Options.prototype, "quality", {
+        get: function () {
+            var quality = 2 /* HIGH */;
+            switch (this._config.quality) {
+                case "high":
+                    quality = 2 /* HIGH */;
+                    break;
+                case "medium":
+                    quality = 1 /* MEDIUM */;
+                    break;
+                case "low":
+                    quality = 0 /* LOW */;
+                    break;
+            }
+            return quality;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Options.prototype, "opacity", {
+        get: function () {
+            return parseFloat(this._config.opacity) || 1;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Options.prototype, "backgroundColor", {
+        get: function () {
+            return this._config.backgroundColor || 0x202020;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Options.prototype.isTransparent = function () {
+        return (this.U.isNumeric(this._config.opacity) && this._config.opacity >= 0 && this._config.opacity < 1);
+    };
+    Options.prototype.isFlat = function () {
+        return this.U.parseBoolean(this._config.flat);
+    };
+    Object.defineProperty(Options.prototype, "flow", {
+        get: function () {
+            return this.U.parseBoolean(this._config.flow);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Options.prototype, "stats", {
+        get: function () {
+            return this.U.parseBoolean(this._config.stats);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Options.prototype, "charge", {
+        get: function () {
+            if (this.U.isNumeric(this._config.charge)) {
+                return this._config.charge;
+            }
+            else {
+                return -100;
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Options.prototype, "distance", {
+        get: function () {
+            if (this.U.isNumeric(this._config.distance)) {
+                return this._config.distance;
+            }
+            else {
+                return 60;
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Options.prototype, "colorBuilder", {
+        get: function () {
+            var ret = d3.scale.category20;
+            switch (this._config.colorType) {
+                case "10":
+                    ret = d3.scale.category10;
+                    break;
+                case "20b":
+                    ret = d3.scale.category20b;
+                    break;
+                case "20c":
+                    ret = d3.scale.category20c;
+                    break;
+            }
+            return ret();
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Options.prototype.isWebGL = function () {
+        return this.webglAvailable;
+    };
+    return Options;
+})();
 /// <reference path='headers/GravityGraphData.d.ts' />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -59,6 +209,8 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 /// <reference path='headers/three.d.ts' />
+/// <reference path='headers/d3.d.ts' />
+/// <reference path='Utils.ts' />
 var Node3D = (function (_super) {
     __extends(Node3D, _super);
     function Node3D(data, config) {
@@ -66,6 +218,9 @@ var Node3D = (function (_super) {
             var material = ?
             var geometry = ?
         */
+        if (!Node3D.nodesColor) {
+            Node3D.nodesColor = config.colorBuilder;
+        }
         var color = Node3D.nodesColor(data.group);
         var material;
         if (Node3D.materialsMap[color]) {
@@ -158,7 +313,6 @@ var Node3D = (function (_super) {
         this.material.opacity = 0.375;
         this.material.needsUpdate = true;
     };
-    Node3D.nodesColor = d3.scale.category20();
     Node3D.basicGeometry = new THREE.IcosahedronGeometry(10, 2);
     Node3D.degradedGeometry = new THREE.IcosahedronGeometry(10, 0);
     //private static lowQualityGeometry : THREE.CircleGeometry = new THREE.CircleGeometry(10, 20);
@@ -282,111 +436,6 @@ var Events = (function () {
     };
     return Events;
 })();
-/**
-* Created by Geoffrey on 5/10/2015.
-*/
-/// <reference path="headers/Detector.d.ts" />
-var EQuality;
-(function (EQuality) {
-    EQuality[EQuality["LOW"] = 0] = "LOW";
-    EQuality[EQuality["MEDIUM"] = 1] = "MEDIUM";
-    EQuality[EQuality["HIGH"] = 2] = "HIGH";
-})(EQuality || (EQuality = {}));
-var Utils = (function () {
-    function Utils() {
-    }
-    Utils.prototype.isNumeric = function (item) {
-        return !isNaN(parseFloat(item));
-    };
-    Utils.prototype.parseBoolean = function (item) {
-        var ret = !!item;
-        if (item == "true") {
-            ret = true;
-        }
-        else if (item == "false") {
-            ret = false;
-        }
-        return ret;
-    };
-    return Utils;
-})();
-var Options = (function () {
-    function Options(config) {
-        this.U = new Utils();
-        this._config = config;
-        this.webglAvailable = Detector.webgl;
-        if (this.quality > 1 /* MEDIUM */ && !this.isWebGL()) {
-            this._config.quality = "medium";
-            console.warn("Degraded mode ! (slower)");
-            console.warn("WebGL is disabled, your drivers, your DirectX version or your browser are outdated.");
-            console.warn("Please update your software.  (https://get.webgl.org/)");
-        }
-    }
-    Object.defineProperty(Options.prototype, "target", {
-        get: function () {
-            return this._config.target;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Options.prototype, "quality", {
-        get: function () {
-            var quality = 2 /* HIGH */;
-            switch (this._config.quality) {
-                case "high":
-                    quality = 2 /* HIGH */;
-                    break;
-                case "medium":
-                    quality = 1 /* MEDIUM */;
-                    break;
-                case "low":
-                    quality = 0 /* LOW */;
-                    break;
-            }
-            return quality;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Options.prototype, "opacity", {
-        get: function () {
-            return parseFloat(this._config.opacity) || 1;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Options.prototype, "backgroundColor", {
-        get: function () {
-            return this._config.backgroundColor || 0x202020;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Options.prototype.isTransparent = function () {
-        return (this.U.isNumeric(this._config.opacity) && this._config.opacity >= 0 && this._config.opacity < 1);
-    };
-    Options.prototype.isFlat = function () {
-        return this.U.parseBoolean(this._config.flat);
-    };
-    Object.defineProperty(Options.prototype, "flow", {
-        get: function () {
-            return this.U.parseBoolean(this._config.flow);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Options.prototype, "stats", {
-        get: function () {
-            return this.U.parseBoolean(this._config.stats);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Options.prototype.isWebGL = function () {
-        return this.webglAvailable;
-    };
-    return Options;
-})();
 /// <reference path="headers/GravityGraphData.d.ts" />
 /// <reference path='headers/d3.d.ts' />
 /// <reference path="Events.ts" />
@@ -406,7 +455,7 @@ var D3Wrapper = (function () {
         else {
             this.force = d3.layout.force3d();
         }
-        this.force.charge(-100).linkDistance(60).size([1000, 1000]).nodes(this.nodes).links(this.links).on('tick', function () {
+        this.force.charge(this.config.charge).linkDistance(this.config.distance).size([1000, 1000]).nodes(this.nodes).links(this.links).on('tick', function () {
             _this.tick();
         }).start();
     }

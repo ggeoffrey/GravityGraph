@@ -38,9 +38,10 @@ class D3Wrapper{
         else{
             this.force = (<any> d3.layout).force3d();
         }
+
         this.force
-            .charge(-100)
-            .linkDistance(60)
+            .charge(this.config.charge)
+            .linkDistance(this.config.distance)
             .size([1000, 1000])
 			.nodes(this.nodes)
 			.links(this.links)

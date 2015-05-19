@@ -2,15 +2,15 @@
 * Created by Geoffrey on 5/10/2015.
 */
 /// <reference path="headers/Detector.d.ts" />
+/// <reference path="headers/d3.d.ts" />
+/// <reference path="headers/GravityGraphData.d.ts" />
 
 
-enum EQuality{
+enum EQuality {
     LOW,
     MEDIUM,
     HIGH
 }
-
-
 
 class Utils {
     
@@ -106,8 +106,46 @@ class Options{
         return this.U.parseBoolean(this._config.stats)
     }
     
+    public get charge () : number {
+        if(this.U.isNumeric(this._config.charge)){
+            return this._config.charge;
+        }
+        else{
+            return -100;
+        }
+    }
+    
+    
+    public get distance() : number {
+        if(this.U.isNumeric(this._config.distance)){
+            return this._config.distance;
+        }
+        else{
+            return 60;
+        }
+    }
+    
+    
+    public get colorBuilder() : D3.Scale.OrdinalScale {
+        var ret = d3.scale.category20;
+        switch(this._config.colorType){
+            case "10":
+                ret = d3.scale.category10;
+                break;
+            case "20b":
+                ret = d3.scale.category20b;
+                break;
+            case "20c":
+                ret = d3.scale.category20c;
+                break;
+        }
+        return ret();
+    }
     
     public isWebGL(){
         return this.webglAvailable;
     }
+    
+    
+    
 }
