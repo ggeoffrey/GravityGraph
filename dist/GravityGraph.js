@@ -228,7 +228,7 @@ var Node3D = (function (_super) {
         }
         else if (config.quality == 2 /* HIGH */) {
             Node3D.OPACITY = 0.90;
-            material = new THREE.MeshPhongMaterial({
+            material = new THREE.MeshLambertMaterial({
                 color: color,
                 transparent: true,
                 opacity: Node3D.OPACITY,
@@ -468,9 +468,6 @@ var Foci = (function () {
                 y: (Math.sin(theta) * radius) + radius / 2
             };
         }
-    };
-    Foci.prototype.getFoci = function () {
-        return this.foci;
     };
     Foci.prototype.getPositionOf = function (name) {
         return this.foci["" + name];
@@ -1069,7 +1066,6 @@ var Visualisation3D = (function () {
             _this.foci.addFocus(node.group);
         });
         this.d3Instance.setNodes(position);
-        console.log(this.foci.getFoci());
         return this.nodes;
     };
     Visualisation3D.prototype.setLinks = function (links) {

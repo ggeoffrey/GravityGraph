@@ -48,7 +48,7 @@ class Node3D extends THREE.Mesh implements IFocusableElement {
                 
                 Node3D.OPACITY = 0.90;
 
-                material = new THREE.MeshPhongMaterial({
+                material = new THREE.MeshLambertMaterial({
                     color: color,
                     transparent: true,
                     opacity: Node3D.OPACITY,

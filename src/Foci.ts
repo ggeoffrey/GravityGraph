@@ -46,9 +46,6 @@ class Foci {
 	}
 	
 	
-	public getFoci(){
-		return this.foci;
-	}
 	
 	public getPositionOf(name : any){
 		return this.foci[""+name];

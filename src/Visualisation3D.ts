@@ -734,11 +734,9 @@ class Visualisation3D {
             this.foci.addFocus(node.group);
         });
              
-        this.d3Instance.setNodes(position);        
+        this.d3Instance.setNodes(position);
         
-        console.log(this.foci.getFoci());
-        
-        return this.nodes;        
+        return this.nodes;
     }
     
     
