@@ -2,7 +2,7 @@
 /// <reference path='headers/d3.d.ts' />
 
 /// <reference path="Events.ts" />
-
+/// <reference path="Foci.ts" />
 /// <reference path="Utils.ts" />
 
 
@@ -14,7 +14,7 @@ class D3Wrapper{
 	private links : Array<any>;
 	
 	private force : D3.Layout.ForceLayout;
-	
+		
 	private events : Events;
 	
 	
@@ -45,12 +45,11 @@ class D3Wrapper{
             .size([1000, 1000])
 			.nodes(this.nodes)
 			.links(this.links)
-            .on('tick', ()=> {
+			.on('tick', () => {
                 this.tick();
-            })
+	        })
 			.start()
-            //.on('end', ()=>{  this.d3IsWorking = false;  })
-            ;
+	        ;
 	}
 	
 	
@@ -103,6 +102,23 @@ class D3Wrapper{
 		this.force.start();
 	}
 	
+	public shakeHard(){
+		
+		var charge = this.force.charge();
+		var distance = this.force.linkDistance(); 
+		
+		
+		this.force.charge(10);
+		this.force.linkDistance(0);
+		this.force.start();
+		
+		setTimeout(()=>{
+			this.force.charge(charge);
+			this.force.linkDistance(distance);
+			this.force.start();
+		}, 1500);
+	}
+	
 	
     private tick() {
 
@@ -112,7 +128,8 @@ class D3Wrapper{
 			this.force.tick();
 		}
 		else if(!this.idle){
-			this.events.emit("tick", []);
+			var alpha = this.force.alpha();
+			this.events.emit("tick", [alpha]);
 		}
 		
 		

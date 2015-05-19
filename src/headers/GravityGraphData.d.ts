@@ -3,7 +3,7 @@
 /// <reference path='three-orbitcontrols.d.ts' />
 /// <reference path='three-projector.d.ts' />
 
-declare enum EQuality{}
+declare enum EQuality{}   // implemented in Utils.ts
 
 
 interface IWorker extends Worker{
@@ -24,10 +24,7 @@ interface IGraph {
 }
 
 
-interface IMouse{
-    x: number;
-    y: number;
-}
+interface IMouse extends IPoint{}
 
 
 
@@ -58,6 +55,11 @@ interface INodeData{
 interface ILinkData{
     source : any;
     target : any;
+}
+
+interface IPoint{
+    x : number;
+    y : number;
 }
 
 

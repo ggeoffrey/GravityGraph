@@ -437,8 +437,50 @@ var Events = (function () {
     return Events;
 })();
 /// <reference path="headers/GravityGraphData.d.ts" />
+var Foci = (function () {
+    function Foci() {
+        this.foci = {};
+        this.names = [];
+    }
+    Foci.prototype.addFocus = function (name) {
+        if (this.names.indexOf("" + name) == -1) {
+            this.names.push("" + name);
+        }
+        this.computeRepartition();
+    };
+    Foci.prototype.addAllFocus = function (key, array) {
+        var _this = this;
+        array.forEach(function (data) {
+            if (data[key]) {
+                _this.addFocus("" + data[key]);
+            }
+        });
+    };
+    Foci.prototype.computeRepartition = function () {
+        this.foci = {};
+        var radius = 1000;
+        var pointCount = this.names.length;
+        for (var i = 0; i < pointCount; i++) {
+            var name = this.names[i];
+            var theta = (i / pointCount) * Math.PI * 2;
+            this.foci[name] = {
+                x: (Math.cos(theta) * radius) + radius / 2,
+                y: (Math.sin(theta) * radius) + radius / 2
+            };
+        }
+    };
+    Foci.prototype.getFoci = function () {
+        return this.foci;
+    };
+    Foci.prototype.getPositionOf = function (name) {
+        return this.foci["" + name];
+    };
+    return Foci;
+})();
+/// <reference path="headers/GravityGraphData.d.ts" />
 /// <reference path='headers/d3.d.ts' />
 /// <reference path="Events.ts" />
+/// <reference path="Foci.ts" />
 /// <reference path="Utils.ts" />
 var D3Wrapper = (function () {
     function D3Wrapper(config, nodes, links) {
@@ -497,13 +539,27 @@ var D3Wrapper = (function () {
     D3Wrapper.prototype.shake = function () {
         this.force.start();
     };
+    D3Wrapper.prototype.shakeHard = function () {
+        var _this = this;
+        var charge = this.force.charge();
+        var distance = this.force.linkDistance();
+        this.force.charge(10);
+        this.force.linkDistance(0);
+        this.force.start();
+        setTimeout(function () {
+            _this.force.charge(charge);
+            _this.force.linkDistance(distance);
+            _this.force.start();
+        }, 1500);
+    };
     D3Wrapper.prototype.tick = function () {
         this.working = true;
         if (!this.isCalm) {
             this.force.tick();
         }
         else if (!this.idle) {
-            this.events.emit("tick", []);
+            var alpha = this.force.alpha();
+            this.events.emit("tick", [alpha]);
         }
     };
     // VISUAL
@@ -601,6 +657,7 @@ var Visualisation3D = (function () {
         this.config = config;
         this.d3Instance = d3instance;
         this.events = new Events();
+        this.useFoci = false;
         this.nodes = [];
         this.links = [];
         this.clouds = [];
@@ -652,7 +709,21 @@ var Visualisation3D = (function () {
     }
     Visualisation3D.prototype.listenToD3 = function () {
         var _this = this;
-        this.d3Instance.on("tick", function () {
+        this.d3Instance.on("tick", function (alpha) {
+            if (_this.useFoci) {
+                var k = 0.1 * alpha;
+                var i = 0, len = _this.nodes.length, node;
+                while (i < len) {
+                    node = _this.nodes[i];
+                    var x = (node.position.x || 0);
+                    //console.log(x);
+                    x += (_this.foci.getPositionOf(node.getData().group).x - x) * k;
+                    var y = (node.position.y || 0);
+                    y += (_this.foci.getPositionOf(node.getData().group).y - y) * k;
+                    node.position.set(x, y, node.position.z);
+                    i++;
+                }
+            }
             var i = 0, len = _this.links.length;
             while (i < len) {
                 _this.links[i].update();
@@ -670,6 +741,10 @@ var Visualisation3D = (function () {
                 _this.nodeSelectAnimation.position.copy(_this.selectedNode.position);
             }
         });
+    };
+    Visualisation3D.prototype.separateGroups = function (separate) {
+        if (separate === void 0) { separate = false; }
+        this.useFoci = separate;
     };
     Visualisation3D.prototype.addCamera = function () {
         this.camera = new THREE.PerspectiveCamera(70, this.canvas.offsetWidth / this.canvas.offsetHeight, 1, 10000);
@@ -973,14 +1048,17 @@ var Visualisation3D = (function () {
     Visualisation3D.prototype.setNodes = function (nodes) {
         var _this = this;
         this.nodes = [];
+        this.foci = new Foci();
         var position = [];
         nodes.forEach(function (node) {
             var n = new Node3D(node, _this.config);
             _this.nodes.push(n);
             _this.rootObject3D.add(n);
             position.push(n.position);
+            _this.foci.addFocus(node.group);
         });
         this.d3Instance.setNodes(position);
+        console.log(this.foci.getFoci());
         return this.nodes;
     };
     Visualisation3D.prototype.setLinks = function (links) {
@@ -1204,9 +1282,11 @@ var GravityGraph = (function () {
         this.nodes.forEach(function (node) {
             node.setFocused();
         });
-        this.links.forEach(function (link) {
-            link.setFocused();
-        });
+        if (this.links) {
+            this.links.forEach(function (link) {
+                link.setFocused();
+            });
+        }
     };
     GravityGraph.prototype.focusOnRelations = function (nodes) {
         var _this = this;
@@ -1260,6 +1340,15 @@ var GravityGraph = (function () {
                 this.focusOnRelations(nodes);
             }
         }
+    };
+    GravityGraph.prototype.separateGroups = function (separate) {
+        if (separate === void 0) { separate = false; }
+        this.vis3D.separateGroups(separate);
+        this.force.shake();
+    };
+    GravityGraph.prototype.shake = function () {
+        this.vis3D.separateGroups(false);
+        this.force.shakeHard();
     };
     // SEARCH / SORT
     GravityGraph.prototype.getRelationsOf = function (node) {

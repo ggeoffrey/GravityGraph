@@ -300,9 +300,11 @@ class GravityGraph {
         this.nodes.forEach((node) => {
             node.setFocused();
         });
-        this.links.forEach((link) => {
-            link.setFocused();
-        });
+        if(this.links){
+            this.links.forEach((link) => {
+                link.setFocused();
+            });
+        }
     }
     
     public focusOnRelations(nodes ? : Array<Node3D>){
@@ -364,6 +366,17 @@ class GravityGraph {
         
     }
     
+    
+    public separateGroups(separate : boolean = false){
+        this.vis3D.separateGroups(separate);
+        this.force.shake();
+    }
+    
+    
+    public shake(){
+        this.vis3D.separateGroups(false);
+        this.force.shakeHard();
+    }
     
     
     // SEARCH / SORT

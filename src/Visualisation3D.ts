@@ -44,6 +44,9 @@ class Visualisation3D {
 
     private clouds: Array<Cloud>;
     
+    private foci : Foci;
+    private useFoci : boolean;
+    
     
     private selectedNode : Node3D;
     private nodeSelectAnimation : NodeSelectAnimation;
@@ -63,6 +66,8 @@ class Visualisation3D {
         this.d3Instance = d3instance;
         
         this.events = new Events();
+        
+        this.useFoci = false;
         
         
         this.nodes = [];
@@ -157,8 +162,26 @@ class Visualisation3D {
     private listenToD3(){
         
         
-        this.d3Instance.on("tick", ()=>{
+        this.d3Instance.on("tick", (alpha)=>{
+            
+            if(this.useFoci){
+                var k = 0.1 * alpha;
                 
+                var i = 0, len = this.nodes.length, node: Node3D;
+                while(i < len){
+                    node = this.nodes[i];
+                    var x = (node.position.x || 0); 
+                    //console.log(x);
+                        x += (this.foci.getPositionOf(node.getData().group).x - x) * k; 
+                    var y = (node.position.y || 0); 
+                        y += (this.foci.getPositionOf(node.getData().group).y - y) * k;
+                    
+                    node.position.set(x,y,node.position.z);  
+                    
+                    i++;
+                }
+            }
+            
             var i = 0, len = this.links.length;
             while (i < len) {
                 this.links[i].update();
@@ -180,6 +203,10 @@ class Visualisation3D {
             
         });
         
+    }
+    
+    public separateGroups(separate : boolean = false){
+        this.useFoci = separate;
     }
     
     
@@ -679,9 +706,8 @@ class Visualisation3D {
     
     public setNodes( nodes : Array<any> ){
         
-        
-        
         this.nodes = [];
+        this.foci = new Foci();
         
         var position = [];
         
@@ -690,17 +716,18 @@ class Visualisation3D {
             this.nodes.push(n);
             this.rootObject3D.add(n);
             position.push(n.position);
+            this.foci.addFocus(node.group);
         });
-                
-        this.d3Instance.setNodes(position);
+             
+        this.d3Instance.setNodes(position);        
         
-        return this.nodes;
+        console.log(this.foci.getFoci());
         
+        return this.nodes;        
     }
     
     
-    public setLinks(links : Array<any>){
-        
+    public setLinks(links : Array<any>){       
         
         if(!this.nodes){
             throw "setLinks : no nodes founds. You must set nodes before links";

@@ -29,6 +29,13 @@
         
          Distance : <input id="distance" type="range" min="-10" max="200" step="1" onchange="changeDistance(this.value);"/>
          <span id="distanceVal"></span>
+         
+        <button onclick="separate = !separate; gravityGraph.separateGroups(separate);">
+            Separate groups
+        </button>
+        <button onclick="gravityGraph.shake();">
+            Shake
+        </button>
     </div>
 
     <div id="tooltip"></div>
@@ -57,7 +64,7 @@
             target : 'dev-canvas',
             //opacity: 0,
             //backgroundColor : 0xffffff,
-            quality : "low",
+            quality : "high",
             flat : false,
             flow : false,
             stats : true,
@@ -96,6 +103,10 @@
                 gravityGraph.start();
             }
         });
+        
+        
+        
+        var separate = false;
         
         
         function changeCharge(val) {
