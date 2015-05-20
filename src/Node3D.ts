@@ -71,17 +71,14 @@ class Node3D extends THREE.Mesh implements IFocusableElement {
                 Node3D.materialsMap[color] = material;
             }
             
-            if(config.quality > EQuality.LOW){
-                if(config.isWebGL()){
-                    super(Node3D.basicGeometry, material.clone());                
-                }
-                else{
-                    super(Node3D.degradedGeometry, material.clone());
-                }
+            
+            if(config.isWebGL()){
+                 super(Node3D.basicGeometry, material.clone());                
             }
             else{
-                super(Node3D.degradedGeometry, material.clone());
+                 super(Node3D.degradedGeometry, material.clone());
             }
+            
 
             this.data = data;
             this.quality = config.quality;

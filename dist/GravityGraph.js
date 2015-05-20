@@ -201,7 +201,7 @@ var Options = (function () {
     };
     Object.defineProperty(Options.prototype, "shadows", {
         get: function () {
-            return this.U.parseBoolean(this._config.shadows) && this.quality > 1 /* MEDIUM */;
+            return this.U.parseBoolean(this._config.shadows) && this.quality > 1 /* MEDIUM */ && this.isWebGL();
         },
         enumerable: true,
         configurable: true
@@ -254,13 +254,8 @@ var Node3D = (function (_super) {
             });
             Node3D.materialsMap[color] = material;
         }
-        if (config.quality > 0 /* LOW */) {
-            if (config.isWebGL()) {
-                _super.call(this, Node3D.basicGeometry, material.clone());
-            }
-            else {
-                _super.call(this, Node3D.degradedGeometry, material.clone());
-            }
+        if (config.isWebGL()) {
+            _super.call(this, Node3D.basicGeometry, material.clone());
         }
         else {
             _super.call(this, Node3D.degradedGeometry, material.clone());
@@ -685,7 +680,7 @@ var Visualisation3D = (function () {
         if (this.config.isWebGL()) {
             this.renderer = new THREE.WebGLRenderer({
                 canvas: this.canvas,
-                antialias: true,
+                antialias: this.config.quality > 0 /* LOW */,
                 alpha: transparentRenderer,
                 devicePixelRatio: window.devicePixelRatio
             });
@@ -693,8 +688,8 @@ var Visualisation3D = (function () {
         else {
             var renderer = new THREE.CanvasRenderer({
                 canvas: this.canvas,
-                antialias: true,
-                alpha: transparentRenderer,
+                antialias: false,
+                alpha: false,
                 devicePixelRatio: window.devicePixelRatio
             });
             this.renderer = renderer;
@@ -777,7 +772,7 @@ var Visualisation3D = (function () {
         x = 3000;
         y = 3000;
         z = 3000;
-        if (this.config.quality != 2 /* HIGH */) {
+        if (this.config.quality < 2 /* HIGH */) {
             this.scene.add(new THREE.HemisphereLight(0xffffff, 0xffffff));
         }
         else {

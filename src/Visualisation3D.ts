@@ -90,7 +90,7 @@ class Visualisation3D {
         if(this.config.isWebGL()){
             this.renderer = new THREE.WebGLRenderer({
                 canvas: this.canvas,
-                antialias: true,
+                antialias: this.config.quality > EQuality.LOW,
                 alpha: transparentRenderer,
                 devicePixelRatio: window.devicePixelRatio
             });
@@ -98,8 +98,8 @@ class Visualisation3D {
         else{
             var renderer = new THREE.CanvasRenderer({
                 canvas: this.canvas,
-                antialias: true,
-                alpha: transparentRenderer,
+                antialias: false,
+                alpha: false,
                 devicePixelRatio: window.devicePixelRatio
             });
             
@@ -246,7 +246,7 @@ class Visualisation3D {
         y = 3000;
         z = 3000;
         
-        if(this.config.quality != EQuality.HIGH){
+        if(this.config.quality < EQuality.HIGH){
             this.scene.add(new THREE.HemisphereLight(0xffffff, 0xffffff));                
         }
         else{                

@@ -147,7 +147,7 @@ class Options{
     }
     
     public get shadows(){
-        return this.U.parseBoolean(this._config.shadows) && this.quality > EQuality.MEDIUM;
+        return this.U.parseBoolean(this._config.shadows) && this.quality > EQuality.MEDIUM && this.isWebGL();
     }
     
     
