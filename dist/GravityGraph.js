@@ -158,9 +158,9 @@ var Link3D = (function (_super) {
     Link3D.prototype.getText = function () {
         return this.text;
     };
-    Link3D.prototype.update = function (container) {
+    Link3D.prototype.update = function () {
         this.lineLength = this.source.distanceTo(this.target);
-        //this.position.copy(this.source.position);
+        //this.position = (this.source.position).clone();
         //this.geometry.vertices[1] = this.target.position.clone().sub(this.source.position);
         this.geometry.verticesNeedUpdate = true;
         if (this.cloud) {
@@ -794,6 +794,7 @@ var Visualisation3D = (function () {
     Visualisation3D.prototype.listenToD3 = function () {
         var _this = this;
         this.d3Instance.on("tick", function (alpha) {
+            console.log("tick");
             if (_this.useFoci) {
                 var k = 0.1 * alpha;
                 var i = 0, len = _this.nodes.length, node;
@@ -810,7 +811,7 @@ var Visualisation3D = (function () {
             }
             var i = 0, len = _this.links.length;
             while (i < len) {
-                _this.links[i].update(_this.rootObject3D);
+                _this.links[i].update();
                 i++;
             }
             // on stabilisation
@@ -1158,8 +1159,17 @@ var Visualisation3D = (function () {
         this.renderer.render(this.scene, this.camera);
     };
     // ----------------------------------------------------
+    Visualisation3D.prototype.setForce = function (force) {
+        this.d3Instance = force;
+    };
     Visualisation3D.prototype.setNodes = function (nodes) {
         var _this = this;
+        this.nodes.forEach(function (n) {
+            _this.rootObject3D.remove(n);
+        });
+        this.links.forEach(function (l) {
+            _this.rootObject3D.remove(l);
+        });
         this.nodes = [];
         this.foci = new Foci();
         var position = [];
@@ -1171,6 +1181,8 @@ var Visualisation3D = (function () {
             _this.foci.addFocus(node.group);
         });
         this.d3Instance.setNodes(position);
+        this.setLinks([]);
+        this.listenToD3();
         return this.nodes;
     };
     Visualisation3D.prototype.setLinks = function (links) {
@@ -1179,20 +1191,29 @@ var Visualisation3D = (function () {
             throw "setLinks : no nodes founds. You must set nodes before links";
         }
         else {
+            this.links.forEach(function (l) {
+                _this.rootObject3D.remove(l);
+            });
             this.links = [];
+            this.clouds = [];
+            this.d3Instance.setLinks([]);
+            var filteredLinks = [];
             links.forEach(function (link) {
                 var source = _this.nodes[link.source];
                 var target = _this.nodes[link.target];
-                var link3D = new Link3D(source, target, link);
-                _this.links.push(link3D);
-                if (_this.config.flow && _this.config.isWebGL() && _this.config.quality > 0 /* LOW */) {
-                    var cloud = new Cloud(link3D);
-                    _this.clouds.push(cloud);
-                    _this.rootObject3D.add(cloud);
+                if (source && target) {
+                    filteredLinks.push(link);
+                    var link3D = new Link3D(source, target, link);
+                    _this.links.push(link3D);
+                    if (_this.config.flow && _this.config.isWebGL() && _this.config.quality > 0 /* LOW */) {
+                        var cloud = new Cloud(link3D);
+                        _this.clouds.push(cloud);
+                        _this.rootObject3D.add(cloud);
+                    }
+                    _this.rootObject3D.add(link3D);
                 }
-                _this.rootObject3D.add(link3D);
             });
-            this.d3Instance.setLinks(links);
+            this.d3Instance.setLinks(filteredLinks);
             return this.links;
         }
     };
@@ -1302,10 +1323,14 @@ var GravityGraph = (function () {
      * Initialise a 3D scene
      */
     GravityGraph.prototype.setNodes = function (nodes) {
-        this.nodes = this.vis3D.setNodes(nodes);
+        var clone = JSON.parse(JSON.stringify(nodes));
+        this.force = new D3Wrapper(this.config);
+        this.vis3D.setForce(this.force);
+        this.nodes = this.vis3D.setNodes(clone);
     };
     GravityGraph.prototype.setLinks = function (links) {
-        this.links = this.vis3D.setLinks(links);
+        var clone = JSON.parse(JSON.stringify(links));
+        this.links = this.vis3D.setLinks(clone);
     };
     // main loop  
     GravityGraph.prototype.run = function (time) {

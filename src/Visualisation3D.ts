@@ -165,6 +165,8 @@ class Visualisation3D {
         
         this.d3Instance.on("tick", (alpha)=>{
             
+            console.log("tick");
+            
             if(this.useFoci){
                 var k = 0.1 * alpha;
                 
@@ -185,7 +187,7 @@ class Visualisation3D {
             
             var i = 0, len = this.links.length;
             while (i < len) {
-                this.links[i].update(this.rootObject3D);
+                this.links[i].update();
                 i++;
             }
             
@@ -659,7 +661,7 @@ class Visualisation3D {
         this.d3Instance.shake();
         this.d3Instance.stabilize();
         
-        this.d3Working = false;       
+        this.d3Working = false;
     }
     
     public shake(){
@@ -745,8 +747,18 @@ class Visualisation3D {
 
     // ----------------------------------------------------
     
+    public setForce(force : D3Wrapper){
+        this.d3Instance = force;
+    }
     
     public setNodes( nodes : Array<any> ){
+        
+        this.nodes.forEach((n)=>{
+           this.rootObject3D.remove(n); 
+        });
+        this.links.forEach((l)=>{
+           this.rootObject3D.remove(l); 
+        });
         
         this.nodes = [];
         this.foci = new Foci();
@@ -762,6 +774,9 @@ class Visualisation3D {
         });
              
         this.d3Instance.setNodes(position);
+        this.setLinks([]);
+        
+        this.listenToD3();
         
         return this.nodes;
     }
@@ -774,29 +789,39 @@ class Visualisation3D {
         }
         else{
             
+            this.links.forEach((l)=>{
+                this.rootObject3D.remove(l);
+            });
+            
             this.links = [];
+            this.clouds = [];
+            this.d3Instance.setLinks([]);
+            
+            var filteredLinks = [];
             
             links.forEach((link)=> {
                 var source = this.nodes[link.source];
                 var target = this.nodes[link.target];
                 
-                var link3D = new Link3D(source, target, link);
-                this.links.push(link3D);
-    
-                if(this.config.flow && this.config.isWebGL() && this.config.quality > EQuality.LOW){
-                    var cloud = new Cloud(link3D);
-                    this.clouds.push(cloud);
-                    this.rootObject3D.add(cloud);
-                }
-                
-                
-                this.rootObject3D.add(link3D);
-                
+                if(source && target ){
+                    
+                    filteredLinks.push(link);
+                    var link3D = new Link3D(source, target, link);
+                    
+                    this.links.push(link3D);
+        
+                    if(this.config.flow && this.config.isWebGL() && this.config.quality > EQuality.LOW){
+                        var cloud = new Cloud(link3D);
+                        this.clouds.push(cloud);
+                        this.rootObject3D.add(cloud);
+                    }                    
+                    
+                    this.rootObject3D.add(link3D);
+                }                
                 
             });
             
-            this.d3Instance.setLinks(links);
-            
+            this.d3Instance.setLinks(filteredLinks);
             
             return this.links;
         }

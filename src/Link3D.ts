@@ -78,10 +78,10 @@ class Link3D extends THREE.Line implements IFocusableElement{
     }
 
 
-    public update(container : THREE.Object3D){
+    public update(){
         this.lineLength = this.source.distanceTo(this.target);
                 
-        //this.position.copy(this.source.position);
+        //this.position = (this.source.position).clone();
         //this.geometry.vertices[1] = this.target.position.clone().sub(this.source.position);
         this.geometry.verticesNeedUpdate  = true;
         

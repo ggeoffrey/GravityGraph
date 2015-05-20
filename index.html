@@ -68,7 +68,7 @@
             //backgroundColor : 0xffffff,
             quality : "high",
             shadows : false,
-            flat : true,
+            flat : false,
             flow : false,
             stats : true,
             charge : -100,
@@ -104,6 +104,15 @@
                 gravityGraph.setLinks(graph.links);
                                
                 gravityGraph.start();
+                
+                
+                setTimeout(function () {
+                    gravityGraph.setNodes(graph.nodes.slice(0,15));
+                    gravityGraph.setLinks(graph.links);
+                    gravityGraph.start();
+                }, 500);
+                
+                
             }
         });
         
@@ -127,6 +136,9 @@
             document.getElementById('distanceVal').innerText = val;
                         
         }
+        
+        
+        
         
         
         

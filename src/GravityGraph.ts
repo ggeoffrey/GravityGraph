@@ -149,11 +149,18 @@ class GravityGraph {
        
 
     public setNodes(nodes : Array<INodeData>){
-         this.nodes = this.vis3D.setNodes(nodes);
+        
+        var clone = JSON.parse(JSON.stringify(nodes));
+        
+        this.force = new D3Wrapper(this.config);
+        this.vis3D.setForce(this.force);
+        
+        this.nodes = this.vis3D.setNodes(clone);
     }
     
     public setLinks(links : Array<ILinkData>){
-        this.links = this.vis3D.setLinks(links);
+        var clone = JSON.parse(JSON.stringify(links));
+        this.links = this.vis3D.setLinks(clone);
     }
     
     
