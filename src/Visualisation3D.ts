@@ -165,7 +165,6 @@ class Visualisation3D {
         
         this.d3Instance.on("tick", (alpha)=>{
             
-            console.log("tick");
             
             if(this.useFoci){
                 var k = 0.1 * alpha;
@@ -543,7 +542,7 @@ class Visualisation3D {
                 }, 150);
            }
            else{
-               this.unselectNode(this.selectedNode);
+               //this.unselectNode(this.selectedNode);
            }         
         
     }
@@ -607,6 +606,7 @@ class Visualisation3D {
             node.selected = false;
             this.selectedNode = null;
             this.nodeSelectAnimation.hide();
+            
         }
     }
     
@@ -840,7 +840,11 @@ class Visualisation3D {
     
     public getSelectedNode() : Node3D {
         return this.selectedNode;
-    }   
+    }
+    
+    public isOverSomething() : boolean{
+        return !!this.getTargetObject();
+    }
     
     
 

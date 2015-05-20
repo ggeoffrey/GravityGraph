@@ -89,7 +89,7 @@ class GravityGraph {
         });
         
         this.vis3D.on("dblclick", ()=>{
-            if (!this.vis3D.getSelectedNode()){
+            if (!this.vis3D.isOverSomething()){
                 this.resetFocus();
             }
             else{

@@ -717,6 +717,7 @@ var NodeSelectAnimation = (function (_super) {
         this.visible = true;
     };
     NodeSelectAnimation.prototype.hide = function () {
+        this.support.scale.set(1, 1, 1);
         this.visible = false;
     };
     return NodeSelectAnimation;
@@ -794,7 +795,6 @@ var Visualisation3D = (function () {
     Visualisation3D.prototype.listenToD3 = function () {
         var _this = this;
         this.d3Instance.on("tick", function (alpha) {
-            console.log("tick");
             if (_this.useFoci) {
                 var k = 0.1 * alpha;
                 var i = 0, len = _this.nodes.length, node;
@@ -1030,7 +1030,6 @@ var Visualisation3D = (function () {
             }, 150);
         }
         else {
-            this.unselectNode(this.selectedNode);
         }
     };
     Visualisation3D.prototype.onDocumentMouseUp = function (event) {
@@ -1224,6 +1223,9 @@ var Visualisation3D = (function () {
     Visualisation3D.prototype.getSelectedNode = function () {
         return this.selectedNode;
     };
+    Visualisation3D.prototype.isOverSomething = function () {
+        return !!this.getTargetObject();
+    };
     return Visualisation3D;
 })();
 /**
@@ -1273,7 +1275,7 @@ var GravityGraph = (function () {
             _this.events.emit("nodeSelected", args);
         });
         this.vis3D.on("dblclick", function () {
-            if (!_this.vis3D.getSelectedNode()) {
+            if (!_this.vis3D.isOverSomething()) {
                 _this.resetFocus();
             }
             else {

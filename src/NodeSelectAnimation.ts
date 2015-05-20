@@ -129,6 +129,7 @@ class NodeSelectAnimation extends THREE.Line {
 	}
 	
 	public hide(){
+		this.support.scale.set(1,1,1);
 		this.visible = false;
 	}
 	
