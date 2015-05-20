@@ -185,7 +185,7 @@ class Visualisation3D {
             
             var i = 0, len = this.links.length;
             while (i < len) {
-                this.links[i].update();
+                this.links[i].update(this.rootObject3D);
                 i++;
             }
             
@@ -218,7 +218,7 @@ class Visualisation3D {
             70,
             this.canvas.offsetWidth / this.canvas.offsetHeight,
             1,
-            10000
+            8000
        );
 
        this.camera.position.z = 400;
@@ -444,11 +444,11 @@ class Visualisation3D {
 
         this.renderer.setSize( newWidth, newHeight);
     }
-
+    
     private onDocumentMouseMove(event : MouseEvent){
 
         event.preventDefault();
-
+        
         var boundingRect : ClientRect = this.canvas.getBoundingClientRect();
 
         this.mouse.x = ( (event.clientX - boundingRect.left)  / this.canvas.offsetWidth ) * 2 - 1;
@@ -539,7 +539,10 @@ class Visualisation3D {
                     }
                     
                 }, 150);
-           }            
+           }
+           else{
+               this.unselectNode(this.selectedNode);
+           }         
         
     }
 
@@ -591,7 +594,7 @@ class Visualisation3D {
         node.selected = true;
         this.selectedNode = node;
         
-        this.nodeSelectAnimation.setPosition(node.position);
+        this.nodeSelectAnimation.setPosition(node);
         this.nodeSelectAnimation.show();
         this.nodeSelectAnimation.animate();
         
@@ -664,7 +667,11 @@ class Visualisation3D {
     }
     
     
+    
+    private nbUpdate = 0;
     public update(){
+        
+        this.nbUpdate ++;
         
         //camera
         if(this.lastCameraPosition == undefined){
@@ -678,21 +685,25 @@ class Visualisation3D {
         }
         
         
+        var i, len;
         
         // clouds
-        var i = 0, len = this.clouds.length;
-        while (i < len) {
-            //debugger;
-            if(!this.d3Working){
-                this.clouds[i].start();
-                this.clouds[i].update();
+        
+        i = 0, len = this.clouds.length;
+        if(this.nbUpdate % 2 == 0){
+            while (i < len) {
+                //debugger;
+                if(!this.d3Working){
+                    this.clouds[i].start();
+                    this.clouds[i].update();
+                }
+                else{
+                    this.clouds[i].stop();
+                }
+                
+                this.clouds[i].animate();            
+                i++;
             }
-            else{
-                this.clouds[i].stop();
-            }
-            
-            this.clouds[i].animate();            
-            i++;
         }
         
         // nodes
@@ -707,6 +718,17 @@ class Visualisation3D {
             }
         }
         */
+        
+        if(this.nbUpdate % 20 == 0){
+            i = 0, len = this.links.length;
+            var link : Link3D;
+            while(i<len){
+                link = this.links[i];
+                link.geometry.computeBoundingBox();
+                i++;
+            }
+            
+        }
         
         if(this.selectedNode){
             this.nodeSelectAnimation.update(target);
@@ -767,8 +789,9 @@ class Visualisation3D {
                     this.rootObject3D.add(cloud);
                 }
                 
-                var arrow = new Arrow3D(link3D);
-                this.rootObject3D.add(arrow);
+                
+                this.rootObject3D.add(link3D);
+                
                 
             });
             

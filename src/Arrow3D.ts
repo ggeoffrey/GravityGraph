@@ -21,11 +21,11 @@ class Arrow3D extends THREE.ArrowHelper implements IFocusableElement{
 		var direction = this.targetPosition.clone().sub(this.sourcePosition);
 		super(direction.clone().normalize(), this.sourcePosition, direction.length(), Arrow3D.COLOR);
 		this.changeDefaults()
-		link.setArrow(this);
 	}
 	
 	private changeDefaults(){
 		this.position = this.sourcePosition;
+		
 	}
 	
 	

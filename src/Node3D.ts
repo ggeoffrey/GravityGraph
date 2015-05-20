@@ -17,7 +17,7 @@ class Node3D extends THREE.Mesh implements IFocusableElement {
         private static materialsMap : { [color : number] : THREE.Material } = {};
         
         
-        public static OPACITY = 0.90;
+        public static OPACITY = 0.95;
 
 
         private data : INodeData;
@@ -46,7 +46,7 @@ class Node3D extends THREE.Mesh implements IFocusableElement {
             }
             else if(config.quality == EQuality.HIGH) {
                 
-                Node3D.OPACITY = 0.90;
+                Node3D.OPACITY = 0.95;
 
                 material = new THREE.MeshLambertMaterial({
                     color: color,
@@ -152,11 +152,13 @@ class Node3D extends THREE.Mesh implements IFocusableElement {
         public setFocused(){
             this.material.opacity = Node3D.OPACITY;
             this.material.needsUpdate = true;
+            this.scale.set(1,1,1);
         }
         
         public setUnFocused(){
             this.material.opacity = 0.375;
             this.material.needsUpdate = true;
+            this.scale.set(1,1,1);
         }
 
     }

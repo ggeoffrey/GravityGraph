@@ -89,11 +89,16 @@ class GravityGraph {
         });
         
         this.vis3D.on("dblclick", ()=>{
-            this.focusOnRelations();
+            if (!this.vis3D.getSelectedNode()){
+                this.resetFocus();
+            }
+            else{
+                this.focusOnRelations();                
+            }
         });
         
         this.vis3D.on("contextmenu", ()=>{
-            this.resetFocus();
+            //this.resetFocus();
         });
         
         
@@ -150,13 +155,15 @@ class GravityGraph {
     public setLinks(links : Array<ILinkData>){
         this.links = this.vis3D.setLinks(links);
     }
-      
+    
+    
+    // main loop  
     
     private run( time? ):void {
         
         if(this.stats){
             this.stats.begin();
-        }        
+        }
             
         if (!this.paused) {
             this.update();
@@ -172,6 +179,19 @@ class GravityGraph {
         }
         
     }
+    
+    
+
+    private update():void {
+        this.vis3D.update();            
+    }
+
+    private render():void {
+        this.vis3D.render();
+    }
+    
+    
+    // controls
     
     
     public start(){
@@ -200,15 +220,7 @@ class GravityGraph {
     }
     
     
-    // main loop
-
-    private update():void {
-        this.vis3D.update();            
-    }
-
-    private render():void {
-        this.vis3D.render();
-    }
+    
     
     
 
@@ -253,8 +265,8 @@ class GravityGraph {
         stats.setMode(0);
         
         stats.domElement.style.position = 'absolute';
-        stats.domElement.style.left = this.canvas.offsetLeft + "px";
-        stats.domElement.style.top = this.canvas.offsetTop + "px";
+        stats.domElement.style.left = (this.canvas.offsetLeft + 5) + "px";
+        stats.domElement.style.top = (this.canvas.offsetTop + 5) + "px";
         
         this.canvas.parentElement.appendChild(stats.domElement);
         
@@ -303,6 +315,7 @@ class GravityGraph {
         if(this.links){
             this.links.forEach((link) => {
                 link.setFocused();
+                link.getText().setUnFocused();
             });
         }
     }
@@ -323,6 +336,9 @@ class GravityGraph {
                 relations.links = relations.links.concat(rel.links);
             });
         }
+        
+        
+        
         if(relations.nodes){            
             
             this.nodes.forEach((node)=>{
@@ -336,9 +352,11 @@ class GravityGraph {
             this.links.forEach((link)=>{
                if(relations.links.indexOf(link) != -1){
                    link.setFocused();
+                   link.getText().setFocused();
                }
                else{
                    link.setUnFocused();
+                   link.getText().setFocused();
                }
             });
         }

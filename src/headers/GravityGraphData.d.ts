@@ -56,6 +56,7 @@ interface INodeData{
 interface ILinkData{
     source : any;
     target : any;
+    value : any;
 }
 
 interface IPoint{
@@ -68,6 +69,24 @@ interface IPoint{
 interface IFocusableElement{
     setFocused() : void;
     setUnFocused() : void;
+}
+
+
+
+interface ITextSpriteParameter{
+    text : string;
+    fontFace? : string;
+    fontSize? : number;
+    borderThickness? : number;
+    borderColor? : ICustomColor;
+    backgroundColor? : ICustomColor;
+}
+
+interface ICustomColor{
+    r : number;
+    g : number;
+    b : number;
+    a : number;
 }
 
 

@@ -1,14 +1,138 @@
 /// <reference path='headers/GravityGraphData.d.ts' />
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
 /// <reference path='headers/three.d.ts' />
+var Cloud = (function (_super) {
+    __extends(Cloud, _super);
+    function Cloud(link) {
+        this.support = link;
+        this.velocity = 0;
+        this.nbParticles = 10;
+        var geometry = new THREE.Geometry();
+        for (var i = 0; i < this.nbParticles; i++) {
+            geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        }
+        _super.call(this, geometry, Cloud.defaultMaterial);
+        this.support.setCloud(this);
+    }
+    Cloud.prototype.changeDefaults = function () {
+    };
+    Cloud.prototype.update = function () {
+        this.position.copy(this.support.getSource().position);
+        this.lookAt(this.support.getTarget().position);
+    };
+    Cloud.prototype.start = function () {
+        if (this.velocity < Cloud.baseVelocity) {
+            this.velocity += 0.005;
+        }
+    };
+    Cloud.prototype.stop = function () {
+        if (this.velocity > 0) {
+            this.velocity -= 0.0035;
+        }
+    };
+    Cloud.prototype.animate = function () {
+        if (this.velocity > 0) {
+            var i = 0, len = this.geometry.vertices.length, vertice, previousVertice;
+            var lineLength = this.support.getLineLength();
+            while (i < len) {
+                vertice = this.geometry.vertices[i];
+                vertice.z += this.velocity;
+                if (vertice.z > lineLength) {
+                    vertice.z = 0;
+                }
+                if (previousVertice) {
+                    if (vertice.z - previousVertice.z < lineLength / this.nbParticles) {
+                        vertice.z += this.velocity;
+                    }
+                }
+                previousVertice = vertice;
+                i++;
+            }
+            this.geometry.verticesNeedUpdate = true;
+        }
+    };
+    Cloud.imgMap = 'assets/img/light.png';
+    Cloud.particleMap = THREE.ImageUtils.loadTexture(Cloud.imgMap);
+    Cloud.defaultMaterial = new THREE.PointCloudMaterial({
+        color: 0xffffff,
+        size: 5,
+        map: Cloud.particleMap,
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        depthWrite: false,
+        //vertexColors: true,
+        sizeAttenuation: true
+    });
+    Cloud.baseVelocity = 0.25;
+    return Cloud;
+})(THREE.PointCloud);
+/// <reference path='headers/GravityGraphData.d.ts' />
+/// <reference path='headers/three.d.ts' />
+/// <reference path='Link3D.ts' />
+var Text3D = (function (_super) {
+    __extends(Text3D, _super);
+    function Text3D(support) {
+        this.support = support;
+        var materialFront = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        var materialArray = [materialFront];
+        var textGeom = new THREE.TextGeometry(support.getData().value + " >", {
+            size: 3,
+            height: 0,
+            curveSegments: 1,
+            font: "droid sans",
+        });
+        // font: helvetiker, gentilis, droid sans, droid serif, optimer
+        // weight: normal, bold
+        //var textMaterial = new THREE.MeshFaceMaterial(materialArray);
+        _super.call(this, textGeom, materialFront);
+        textGeom.computeBoundingBox();
+        this.width = textGeom.boundingBox.max.x - textGeom.boundingBox.min.x;
+        this.rotateZ(Math.PI / 2);
+        this.setUnFocused();
+    }
+    Text3D.prototype.update = function () {
+        this.position.copy(this.support.getSource().position);
+        this.position.add(this.support.getTarget().position.clone().sub(this.position).divideScalar(2));
+        this.lookAt(this.support.getTarget().position);
+        this.rotateY(-Math.PI / 2);
+    };
+    Text3D.prototype.setFocused = function () {
+        this.visible = true;
+    };
+    Text3D.prototype.setUnFocused = function () {
+        this.visible = false;
+    };
+    return Text3D;
+})(THREE.Mesh);
+/// <reference path='headers/GravityGraphData.d.ts' />
+/// <reference path='headers/three.d.ts' />
+/// <reference path="Cloud.ts" />
 /// <reference path="Arrow3D.ts" />
-var Link3D = (function () {
+/// <reference path="Text3D.ts" />
+var Link3D = (function (_super) {
+    __extends(Link3D, _super);
     function Link3D(source, target, data) {
         this.data = {
             source: data.source,
-            target: data.target
+            target: data.target,
+            value: data.value
         };
         this.source = source;
         this.target = target;
+        //this.arrow = new Arrow3D(this);
+        this.text = new Text3D(this);
+        //this.arrow.add(this.text);
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push(this.source.position);
+        geometry.vertices.push(this.target.position);
+        _super.call(this, geometry, Link3D.material);
+        this.add(this.text);
+        this.position = this.source.position;
     }
     Link3D.prototype.getData = function () {
         return this.data;
@@ -28,29 +152,41 @@ var Link3D = (function () {
     Link3D.prototype.getTarget = function () {
         return this.target;
     };
-    Link3D.prototype.setArrow = function (arrow) {
-        this.arrow = arrow;
+    Link3D.prototype.getArrow = function () {
+        return this.arrow;
     };
-    Link3D.prototype.update = function () {
+    Link3D.prototype.getText = function () {
+        return this.text;
+    };
+    Link3D.prototype.update = function (container) {
         this.lineLength = this.source.distanceTo(this.target);
+        //this.position.copy(this.source.position);
+        //this.geometry.vertices[1] = this.target.position.clone().sub(this.source.position);
+        this.geometry.verticesNeedUpdate = true;
         if (this.cloud) {
             this.cloud.update();
         }
-        this.arrow.update();
+        //this.arrow.update();
+        this.text.update();
     };
     // VIEW
     Link3D.prototype.setFocused = function () {
         if (this.cloud)
             this.cloud.visible = true;
-        this.arrow.setFocused();
+        //this.arrow.setFocused();
+        this.visible = true;
+        //this.text.setFocused();
     };
     Link3D.prototype.setUnFocused = function () {
         if (this.cloud)
             this.cloud.visible = false;
-        this.arrow.setUnFocused();
+        //this.arrow.setUnFocused();
+        this.visible = false;
+        //this.text.setUnFocused();        
     };
+    Link3D.material = new THREE.LineBasicMaterial({ color: 0xffffff });
     return Link3D;
-})();
+})(THREE.Line);
 /**
 * Created by Geoffrey on 5/10/2015.
 */
@@ -209,12 +345,6 @@ var Options = (function () {
     return Options;
 })();
 /// <reference path='headers/GravityGraphData.d.ts' />
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
 /// <reference path='headers/three.d.ts' />
 /// <reference path='headers/d3.d.ts' />
 /// <reference path='Utils.ts' />
@@ -234,7 +364,7 @@ var Node3D = (function (_super) {
             material = Node3D.materialsMap[color];
         }
         else if (config.quality == 2 /* HIGH */) {
-            Node3D.OPACITY = 0.90;
+            Node3D.OPACITY = 0.95;
             material = new THREE.MeshLambertMaterial({
                 color: color,
                 transparent: true,
@@ -310,16 +440,18 @@ var Node3D = (function (_super) {
     Node3D.prototype.setFocused = function () {
         this.material.opacity = Node3D.OPACITY;
         this.material.needsUpdate = true;
+        this.scale.set(1, 1, 1);
     };
     Node3D.prototype.setUnFocused = function () {
         this.material.opacity = 0.375;
         this.material.needsUpdate = true;
+        this.scale.set(1, 1, 1);
     };
     Node3D.basicGeometry = new THREE.IcosahedronGeometry(10, 2);
     Node3D.degradedGeometry = new THREE.IcosahedronGeometry(10, 0);
     //private static lowQualityGeometry : THREE.CircleGeometry = new THREE.CircleGeometry(10, 20);
     Node3D.materialsMap = {};
-    Node3D.OPACITY = 0.90;
+    Node3D.OPACITY = 0.95;
     return Node3D;
 })(THREE.Mesh);
 /// <reference path="headers/three.d.ts" />
@@ -333,7 +465,6 @@ var Arrow3D = (function (_super) {
         var direction = this.targetPosition.clone().sub(this.sourcePosition);
         _super.call(this, direction.clone().normalize(), this.sourcePosition, direction.length(), Arrow3D.COLOR);
         this.changeDefaults();
-        link.setArrow(this);
     }
     Arrow3D.prototype.changeDefaults = function () {
         this.position = this.sourcePosition;
@@ -357,73 +488,6 @@ var Arrow3D = (function (_super) {
     Arrow3D.COLOR = 0xffffff; //0x909090;
     return Arrow3D;
 })(THREE.ArrowHelper);
-/// <reference path='headers/GravityGraphData.d.ts' />
-/// <reference path='headers/three.d.ts' />
-var Cloud = (function (_super) {
-    __extends(Cloud, _super);
-    function Cloud(link) {
-        this.support = link;
-        this.velocity = 0;
-        this.nbParticles = 10;
-        var geometry = new THREE.Geometry();
-        for (var i = 0; i < this.nbParticles; i++) {
-            geometry.vertices.push(new THREE.Vector3(0, 0, 0));
-        }
-        _super.call(this, geometry, Cloud.defaultMaterial);
-        this.support.setCloud(this);
-    }
-    Cloud.prototype.changeDefaults = function () {
-    };
-    Cloud.prototype.update = function () {
-        this.position.copy(this.support.getSource().position);
-        this.lookAt(this.support.getTarget().position);
-    };
-    Cloud.prototype.start = function () {
-        if (this.velocity < Cloud.baseVelocity) {
-            this.velocity += 0.005;
-        }
-    };
-    Cloud.prototype.stop = function () {
-        if (this.velocity > 0) {
-            this.velocity -= 0.0035;
-        }
-    };
-    Cloud.prototype.animate = function () {
-        if (this.velocity > 0) {
-            var i = 0, len = this.geometry.vertices.length, vertice, previousVertice;
-            var lineLength = this.support.getLineLength();
-            while (i < len) {
-                vertice = this.geometry.vertices[i];
-                vertice.z += this.velocity;
-                if (vertice.z > lineLength) {
-                    vertice.z = 0;
-                }
-                if (previousVertice) {
-                    if (vertice.z - previousVertice.z < lineLength / this.nbParticles) {
-                        vertice.z += this.velocity;
-                    }
-                }
-                previousVertice = vertice;
-                i++;
-            }
-            this.geometry.verticesNeedUpdate = true;
-        }
-    };
-    Cloud.imgMap = 'assets/img/light.png';
-    Cloud.particleMap = THREE.ImageUtils.loadTexture(Cloud.imgMap);
-    Cloud.defaultMaterial = new THREE.PointCloudMaterial({
-        color: 0xffffff,
-        size: 5,
-        map: Cloud.particleMap,
-        blending: THREE.AdditiveBlending,
-        transparent: true,
-        depthWrite: false,
-        //vertexColors: true,
-        sizeAttenuation: true
-    });
-    Cloud.baseVelocity = 0.25;
-    return Cloud;
-})(THREE.PointCloud);
 var Events = (function () {
     function Events() {
         this.eventsMap = {};
@@ -610,23 +674,30 @@ var NodeSelectAnimation = (function (_super) {
         this.firstExpand = true;
         this.material.opacity = 1;
         this.material.needsUpdate = true;
-        this.animatedObject = { scale: 0 };
+        this.animatedObject = { scaleCircle: 0, scaleNode: 1 };
         this.animation = new createjs.Tween(this.animatedObject).to({
-            scale: 3000
+            scaleCircle: 3000
         }, 1000).call(function () {
             //createjs.Tween.removeTweens(this.animatedObject);
             _this.firstExpand = false;
-            _this.animatedObject = { scale: 0 };
+            _this.animatedObject.scaleCircle = 0;
             _this.animation = new createjs.Tween(_this.animatedObject, {
                 loop: true,
             }).to({
-                scale: 100
+                scaleCircle: 100,
             }, 1000);
         });
+        this.animation2 = new createjs.Tween(this.animatedObject, {
+            loop: true,
+        }).to({
+            scaleNode: 1.25
+        }, 500, createjs.Ease.backInOut).to({
+            scaleNode: 1
+        }, 500, createjs.Ease.backInOut);
     };
     NodeSelectAnimation.prototype.update = function (target) {
-        if (this.animatedObject.scale !== undefined) {
-            var s = this.animatedObject.scale / 100;
+        if (this.animatedObject.scaleCircle !== undefined) {
+            var s = this.animatedObject.scaleCircle / 100;
             this.scale.set(s, s, s);
             if (!this.firstExpand) {
                 var opacity = Math.sin(1 - s);
@@ -634,10 +705,13 @@ var NodeSelectAnimation = (function (_super) {
                 this.material.needsUpdate = true;
             }
             this.lookAt(target);
+            s = this.animatedObject.scaleNode;
+            this.support.scale.set(s, s, s);
         }
     };
-    NodeSelectAnimation.prototype.setPosition = function (position) {
-        this.position.copy(position);
+    NodeSelectAnimation.prototype.setPosition = function (node) {
+        this.support = node;
+        this.position.copy(node.position);
     };
     NodeSelectAnimation.prototype.show = function () {
         this.visible = true;
@@ -663,6 +737,7 @@ var NodeSelectAnimation = (function (_super) {
 var Visualisation3D = (function () {
     function Visualisation3D(config, d3instance) {
         this.zeroVect = new THREE.Vector3();
+        this.nbUpdate = 0;
         this.config = config;
         this.d3Instance = d3instance;
         this.events = new Events();
@@ -735,7 +810,7 @@ var Visualisation3D = (function () {
             }
             var i = 0, len = _this.links.length;
             while (i < len) {
-                _this.links[i].update();
+                _this.links[i].update(_this.rootObject3D);
                 i++;
             }
             // on stabilisation
@@ -756,7 +831,7 @@ var Visualisation3D = (function () {
         this.useFoci = separate;
     };
     Visualisation3D.prototype.addCamera = function () {
-        this.camera = new THREE.PerspectiveCamera(70, this.canvas.offsetWidth / this.canvas.offsetHeight, 1, 10000);
+        this.camera = new THREE.PerspectiveCamera(70, this.canvas.offsetWidth / this.canvas.offsetHeight, 1, 8000);
         this.camera.position.z = 400;
     };
     Visualisation3D.prototype.addRoot = function () {
@@ -953,6 +1028,9 @@ var Visualisation3D = (function () {
                 }
             }, 150);
         }
+        else {
+            this.unselectNode(this.selectedNode);
+        }
     };
     Visualisation3D.prototype.onDocumentMouseUp = function (event) {
         //event.preventDefault();
@@ -980,7 +1058,7 @@ var Visualisation3D = (function () {
         }
         node.selected = true;
         this.selectedNode = node;
-        this.nodeSelectAnimation.setPosition(node.position);
+        this.nodeSelectAnimation.setPosition(node);
         this.nodeSelectAnimation.show();
         this.nodeSelectAnimation.animate();
     };
@@ -1025,6 +1103,7 @@ var Visualisation3D = (function () {
         this.d3Instance.shake();
     };
     Visualisation3D.prototype.update = function () {
+        this.nbUpdate++;
         //camera
         if (this.lastCameraPosition == undefined) {
             this.lastCameraPosition = this.camera.position.clone();
@@ -1035,19 +1114,22 @@ var Visualisation3D = (function () {
         else {
             this.lastCameraPosition.copy(this.camera.position);
         }
+        var i, len;
         // clouds
-        var i = 0, len = this.clouds.length;
-        while (i < len) {
-            //debugger;
-            if (!this.d3Working) {
-                this.clouds[i].start();
-                this.clouds[i].update();
+        i = 0, len = this.clouds.length;
+        if (this.nbUpdate % 2 == 0) {
+            while (i < len) {
+                //debugger;
+                if (!this.d3Working) {
+                    this.clouds[i].start();
+                    this.clouds[i].update();
+                }
+                else {
+                    this.clouds[i].stop();
+                }
+                this.clouds[i].animate();
+                i++;
             }
-            else {
-                this.clouds[i].stop();
-            }
-            this.clouds[i].animate();
-            i++;
         }
         // nodes
         i = 0, len = this.nodes.length;
@@ -1059,6 +1141,15 @@ var Visualisation3D = (function () {
             }
         }
         */
+        if (this.nbUpdate % 20 == 0) {
+            i = 0, len = this.links.length;
+            var link;
+            while (i < len) {
+                link = this.links[i];
+                link.geometry.computeBoundingBox();
+                i++;
+            }
+        }
         if (this.selectedNode) {
             this.nodeSelectAnimation.update(target);
         }
@@ -1099,8 +1190,7 @@ var Visualisation3D = (function () {
                     _this.clouds.push(cloud);
                     _this.rootObject3D.add(cloud);
                 }
-                var arrow = new Arrow3D(link3D);
-                _this.rootObject3D.add(arrow);
+                _this.rootObject3D.add(link3D);
             });
             this.d3Instance.setLinks(links);
             return this.links;
@@ -1162,10 +1252,15 @@ var GravityGraph = (function () {
             _this.events.emit("nodeSelected", args);
         });
         this.vis3D.on("dblclick", function () {
-            _this.focusOnRelations();
+            if (!_this.vis3D.getSelectedNode()) {
+                _this.resetFocus();
+            }
+            else {
+                _this.focusOnRelations();
+            }
         });
         this.vis3D.on("contextmenu", function () {
-            _this.resetFocus();
+            //this.resetFocus();
         });
         // ----------------
         this.run();
@@ -1212,6 +1307,7 @@ var GravityGraph = (function () {
     GravityGraph.prototype.setLinks = function (links) {
         this.links = this.vis3D.setLinks(links);
     };
+    // main loop  
     GravityGraph.prototype.run = function (time) {
         var _this = this;
         if (this.stats) {
@@ -1229,6 +1325,13 @@ var GravityGraph = (function () {
             this.stats.end();
         }
     };
+    GravityGraph.prototype.update = function () {
+        this.vis3D.update();
+    };
+    GravityGraph.prototype.render = function () {
+        this.vis3D.render();
+    };
+    // controls
     GravityGraph.prototype.start = function () {
         this.vis3D.start();
     };
@@ -1244,13 +1347,6 @@ var GravityGraph = (function () {
     };
     GravityGraph.prototype.setDistance = function (distance) {
         this.force.setDistance(distance);
-    };
-    // main loop
-    GravityGraph.prototype.update = function () {
-        this.vis3D.update();
-    };
-    GravityGraph.prototype.render = function () {
-        this.vis3D.render();
     };
     // D3
     /*
@@ -1277,8 +1373,8 @@ var GravityGraph = (function () {
         var stats = new Stats();
         stats.setMode(0);
         stats.domElement.style.position = 'absolute';
-        stats.domElement.style.left = this.canvas.offsetLeft + "px";
-        stats.domElement.style.top = this.canvas.offsetTop + "px";
+        stats.domElement.style.left = (this.canvas.offsetLeft + 5) + "px";
+        stats.domElement.style.top = (this.canvas.offsetTop + 5) + "px";
         this.canvas.parentElement.appendChild(stats.domElement);
         this.stats = stats;
     };
@@ -1306,6 +1402,7 @@ var GravityGraph = (function () {
         if (this.links) {
             this.links.forEach(function (link) {
                 link.setFocused();
+                link.getText().setUnFocused();
             });
         }
     };
@@ -1337,9 +1434,11 @@ var GravityGraph = (function () {
             this.links.forEach(function (link) {
                 if (relations.links.indexOf(link) != -1) {
                     link.setFocused();
+                    link.getText().setFocused();
                 }
                 else {
                     link.setUnFocused();
+                    link.getText().setFocused();
                 }
             });
         }

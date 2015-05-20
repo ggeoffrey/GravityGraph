@@ -7,10 +7,14 @@ class NodeSelectAnimation extends THREE.Line {
 	
 	
 	private animation; // : createjs.Tween;
+	private animation2;
 	private animatedObject:any;
 	
 	
 	private firstExpand  : boolean; 
+	
+	
+	private support : Node3D;
 	
 	constructor(){
 		
@@ -56,31 +60,44 @@ class NodeSelectAnimation extends THREE.Line {
 		this.material.needsUpdate = true;
 		
 		
-		this.animatedObject = {scale : 0};
+		this.animatedObject = {scaleCircle : 0, scaleNode: 1};
 		this.animation = new createjs.Tween(this.animatedObject)
 		.to({
-			scale : 3000
+			scaleCircle : 3000
 		}, 1000)
 		.call(()=>{
 			
 			//createjs.Tween.removeTweens(this.animatedObject);
 			this.firstExpand = false;
-			this.animatedObject = {scale : 0};
+			this.animatedObject.scaleCircle = 0;
 			this.animation = new createjs.Tween(this.animatedObject,
 			{
 				loop : true,
 			})
 			.to({
-				scale : 100
+				scaleCircle : 100,
 			}, 1000);
 			
 		});
+		
+		this.animation2 = new createjs.Tween(this.animatedObject,
+			{
+				loop : true,
+			})
+			.to({
+				scaleNode : 1.25
+			}, 500, createjs.Ease.backInOut)
+			.to({
+				scaleNode : 1
+			}, 500, createjs.Ease.backInOut);
+		
+		
 	}
 	
 	
 	public update(target : THREE.Vector3){
-		if(this.animatedObject.scale !== undefined ){
-			var s = this.animatedObject.scale / 100;
+		if(this.animatedObject.scaleCircle !== undefined ){
+			var s = this.animatedObject.scaleCircle / 100;
 	
 			this.scale.set(s,s,s);
 			
@@ -90,16 +107,20 @@ class NodeSelectAnimation extends THREE.Line {
 				this.material.needsUpdate = true;
 			}
 			
-			
 			this.lookAt(target);
+			
+			s = this.animatedObject.scaleNode;
+			
+			this.support.scale.set(s,s,s);
 		}
 		
 	}
 	
 	
 	
-	public setPosition(position : THREE.Vector3){
-		this.position.copy(position);
+	public setPosition(node : Node3D){
+		this.support = node;
+		this.position.copy(node.position);
 	}
 	
 	
