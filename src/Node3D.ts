@@ -89,12 +89,12 @@ class Node3D extends THREE.Mesh implements IFocusableElement {
             this.selected = false;
             this.walked = false;
             
-            this.changeDefaults();
+            this.changeDefaults(config);
         }
 
-        private changeDefaults() {
+        private changeDefaults(config : Options) {
             this.position.set(0,0,0);
-            this.castShadow = true;
+            this.castShadow = config.shadows;
         }
 
         // COLOR

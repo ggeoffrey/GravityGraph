@@ -40,7 +40,8 @@ interface IOptions{
     stats? : boolean;
     charge? : number;
     distance? : number;
-    colorType : string;
+    colorType ? : string;
+    shadows ? : boolean; 
 }
 
 

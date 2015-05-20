@@ -112,7 +112,7 @@ class Visualisation3D {
         }
 
         
-        this.renderer.shadowMapEnabled = true;
+        this.renderer.shadowMapEnabled = this.config.shadows;
         this.renderer.shadowMapType = THREE.PCFShadowMap;
         this.renderer.sortObjects = false;
         
@@ -253,7 +253,7 @@ class Visualisation3D {
             this.addLight(x, y, z );
 
             x = -x;
-            this.addLight(x, y, z , true );
+            this.addLight(x, y, z , this.config.shadows );
 
             y = -y;
             this.addLight(x, y, z);
@@ -315,7 +315,7 @@ class Visualisation3D {
         });
         var sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
 
-        sphereBackground.receiveShadow = true;
+        sphereBackground.receiveShadow = this.config.shadows;
         sphereBackground.scale.set(200, 200, 200);
 
         this.scene.add(sphereBackground);

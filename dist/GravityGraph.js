@@ -199,6 +199,13 @@ var Options = (function () {
     Options.prototype.isWebGL = function () {
         return this.webglAvailable;
     };
+    Object.defineProperty(Options.prototype, "shadows", {
+        get: function () {
+            return this.U.parseBoolean(this._config.shadows) && this.quality > 1 /* MEDIUM */;
+        },
+        enumerable: true,
+        configurable: true
+    });
     return Options;
 })();
 /// <reference path='headers/GravityGraphData.d.ts' />
@@ -262,11 +269,11 @@ var Node3D = (function (_super) {
         this.quality = config.quality;
         this.selected = false;
         this.walked = false;
-        this.changeDefaults();
+        this.changeDefaults(config);
     }
-    Node3D.prototype.changeDefaults = function () {
+    Node3D.prototype.changeDefaults = function (config) {
         this.position.set(0, 0, 0);
-        this.castShadow = true;
+        this.castShadow = config.shadows;
     };
     // COLOR
     Node3D.setColorMethod = function (colorScale) {
@@ -695,7 +702,7 @@ var Visualisation3D = (function () {
         if (!transparentRenderer) {
             this.config.opacity = 1;
         }
-        this.renderer.shadowMapEnabled = true;
+        this.renderer.shadowMapEnabled = this.config.shadows;
         this.renderer.shadowMapType = THREE.PCFShadowMap;
         this.renderer.sortObjects = false;
         this.renderer.setClearColor(this.config.backgroundColor, this.config.opacity);
@@ -776,7 +783,7 @@ var Visualisation3D = (function () {
         else {
             this.addLight(x, y, z);
             x = -x;
-            this.addLight(x, y, z, true);
+            this.addLight(x, y, z, this.config.shadows);
             y = -y;
             this.addLight(x, y, z);
             x = -x;
@@ -818,7 +825,7 @@ var Visualisation3D = (function () {
             opacity: this.config.opacity,
         });
         var sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
-        sphereBackground.receiveShadow = true;
+        sphereBackground.receiveShadow = this.config.shadows;
         sphereBackground.scale.set(200, 200, 200);
         this.scene.add(sphereBackground);
         return sphereBackground;

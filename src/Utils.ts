@@ -146,6 +146,10 @@ class Options{
         return this.webglAvailable;
     }
     
+    public get shadows(){
+        return this.U.parseBoolean(this._config.shadows) && this.quality > EQuality.MEDIUM;
+    }
+    
     
     
 }
