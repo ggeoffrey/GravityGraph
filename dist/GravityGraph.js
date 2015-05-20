@@ -488,6 +488,7 @@ var D3Wrapper = (function () {
         this.events = new Events();
         this.nodes = nodes;
         this.links = links;
+        this.working = false;
         if (this.config.isFlat()) {
             this.force = d3.layout.force();
         }
@@ -496,7 +497,10 @@ var D3Wrapper = (function () {
         }
         this.force.charge(this.config.charge).linkDistance(this.config.distance).size([1000, 1000]).nodes(this.nodes).links(this.links).on('tick', function () {
             _this.tick();
-        }).start();
+        });
+        this.force.on("end", function () {
+            _this.working = false;
+        });
     }
     D3Wrapper.prototype.isWorking = function () {
         return this.working;
@@ -515,7 +519,7 @@ var D3Wrapper = (function () {
         this.events.add(name, action);
     };
     D3Wrapper.prototype.isStable = function () {
-        return this.force.alpha() <= 1e-2;
+        return this.force.alpha() <= 1e-2 || false;
     };
     D3Wrapper.prototype.isCalm = function () {
         return this.force.alpha() <= 1e-1;
@@ -531,10 +535,15 @@ var D3Wrapper = (function () {
         this.force.tick();
     };
     D3Wrapper.prototype.calmDown = function () {
-        this.stabilize(50);
+        //this.stabilize(50);
     };
     D3Wrapper.prototype.shake = function () {
-        this.force.start();
+        if (this.working) {
+            this.force.resume();
+        }
+        else {
+            this.force.start();
+        }
     };
     D3Wrapper.prototype.shakeHard = function () {
         var _this = this;
@@ -562,12 +571,12 @@ var D3Wrapper = (function () {
     // VISUAL
     D3Wrapper.prototype.setDistance = function (distance) {
         this.force.linkDistance(distance);
-        this.shake();
+        this.force.start();
         //this.calmDown();
     };
     D3Wrapper.prototype.setCharge = function (charge) {
         this.force.charge(charge);
-        this.shake();
+        this.force.start();
         //this.calmDown();
     };
     return D3Wrapper;
@@ -937,8 +946,9 @@ var Visualisation3D = (function () {
                 _this.controls.enabled = false;
                 _this.getPlanIntersect();
                 _this.canvas.style.cursor = 'move';
-                _this.d3Instance.shake();
-                _this.d3Instance.calmDown();
+                if (_this.d3Instance.isStable()) {
+                    _this.d3Instance.shake();
+                }
             }, 150);
         }
     };
@@ -951,7 +961,9 @@ var Visualisation3D = (function () {
                 this.selectNode(this.currentlyIntersectedObject, event);
             }
             else {
-                this.d3Instance.shake();
+                if (this.d3Instance.isStable()) {
+                    this.d3Instance.shake();
+                }
             }
             this.currentlySelectedObject = null;
         }

@@ -533,8 +533,10 @@ class Visualisation3D {
     
                     this.canvas.style.cursor = 'move';
     
-                    this.d3Instance.shake();
-                    this.d3Instance.calmDown();
+                    if(this.d3Instance.isStable()){
+                        this.d3Instance.shake();
+                        //this.d3Instance.calmDown();
+                    }
                     
                 }, 150);
            }            
@@ -553,7 +555,10 @@ class Visualisation3D {
                 this.selectNode(this.currentlyIntersectedObject, event);
             }
             else{
-                this.d3Instance.shake();
+                if(this.d3Instance.isStable()){
+                    this.d3Instance.shake();
+                    //this.d3Instance.calmDown();                  
+                }
             }            
             
             this.currentlySelectedObject = null;

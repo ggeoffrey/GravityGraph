@@ -20,6 +20,7 @@ class D3Wrapper{
 	
 	private idle : boolean;
 	private working : boolean;
+	
 
 	constructor( config: Options,  nodes = [], links = []){
 		
@@ -30,7 +31,7 @@ class D3Wrapper{
 		this.nodes = nodes;
 		this.links = links;
 		
-		
+		this.working = false;
 		
 		if(this.config.isFlat()){
             this.force = d3.layout.force();
@@ -48,8 +49,11 @@ class D3Wrapper{
 			.on('tick', () => {
                 this.tick();
 	        })
-			.start()
 	        ;
+			
+		this.force.on("end", ()=>{
+			this.working = false;
+		});
 	}
 	
 	
@@ -75,7 +79,7 @@ class D3Wrapper{
 	
 	
 	public isStable(){
-		return this.force.alpha() <= 1e-2;
+		return this.force.alpha() <= 1e-2 || false;
 	}
 	
 	public isCalm(){
@@ -95,11 +99,16 @@ class D3Wrapper{
 	}
 	
 	public calmDown(){
-		this.stabilize(50);
+		//this.stabilize(50);
 	}
 	
 	public shake(){
-		this.force.start();
+		if(this.working){
+			this.force.resume();
+		}
+		else{
+			this.force.start();			
+		}
 	}
 	
 	public shakeHard(){
@@ -140,13 +149,13 @@ class D3Wrapper{
 	
 	public setDistance(distance : number){
 		this.force.linkDistance(distance);
-		this.shake();
+		this.force.start();
 		//this.calmDown();
 	}
 	
 	public setCharge(charge : number){
 		this.force.charge(charge);
-		this.shake();
+		this.force.start();
 		//this.calmDown();
 	}
 	
