@@ -2,8 +2,7 @@
  * Created by Geoffrey on 04/04/2015.
  */
 
-/// <reference path='headers/d3.d.ts' />
-/// <reference path='headers/GravityGraphData.d.ts' />
+/// <reference path='headers/GravityGraph.d.ts' />
 
 
 
