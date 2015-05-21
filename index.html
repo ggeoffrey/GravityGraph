@@ -21,13 +21,13 @@
         <button onclick="gravityGraph.focusOnRelations()">
             Show relations
         </button>
-        <button onclick="gravityGraph.focusOnGroupRelations(ERelation.INNER_OUTER)">
+        <button onclick="gravityGraph.focusOnGroupRelations(GravityGraph.ERelation.INNER_OUTER)">
             Show group relations
         </button>
-        <button onclick="gravityGraph.focusOnGroupRelations(ERelation.INNER)">
+        <button onclick="gravityGraph.focusOnGroupRelations(GravityGraph.ERelation.INNER)">
             Show group internal relations
         </button>
-        <button onclick="gravityGraph.focusOnGroupRelations(ERelation.OUTER)">
+        <button onclick="gravityGraph.focusOnGroupRelations(GravityGraph.ERelation.OUTER)">
             Show group external relations
         </button>
         Charge : <input id="charge" type="range" min="-150" max="10" step="1" onchange="changeCharge(this.value);"/>
