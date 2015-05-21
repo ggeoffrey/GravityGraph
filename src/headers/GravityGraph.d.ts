@@ -17,6 +17,7 @@
 /// <reference path='../Events.ts' />
 /// <reference path="../Foci.ts" />
 /// <reference path="../Utils.ts" />
+/// <reference path="../Config.ts" />
 /// <reference path="../Visualisation3D.ts" />
 /// <reference path="../Arrow3D.ts" />
 /// <reference path="../Text3D.ts" />
@@ -28,29 +29,21 @@
 declare module GravityGraph {   
     
     
-    interface IWorker extends Worker{
-        postMessage(message : IWorkerMessaqe, rest? : any) : void;
-    }
-    
-    interface IWorkerMessaqe { // extends MessageEvent{
-        message : string;
-        content : any;
-        type : string;
-    }
-    
-    
-    
     interface IGraph {
         nodes : Array<Node3D>;
         links : Array<Link3D>;
     }
     
+    interface IPoint{
+        x : number;
+        y : number;
+    }
     
     interface IMouse extends IPoint{}
     
     
     
-    interface IOptions{
+    interface IConfig{
         target : string;
         opacity? : number;
         backgroundColor? : number;
@@ -81,10 +74,7 @@ declare module GravityGraph {
         value : any;
     }
     
-    interface IPoint{
-        x : number;
-        y : number;
-    }
+    
     
     
     
@@ -94,6 +84,14 @@ declare module GravityGraph {
     }
     
     
+    interface IWorker extends Worker{
+        postMessage(message : IWorkerMessaqe, rest? : any) : void;
+    }
     
+    interface IWorkerMessaqe { // extends MessageEvent{
+        message : string;
+        content : any;
+        type : string;
+    }
     
 }

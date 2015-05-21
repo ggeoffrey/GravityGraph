@@ -26,7 +26,7 @@ module GravityGraph{
             private quality : EQuality;
     
     
-            constructor(data:INodeData, config : Options) {
+            constructor(data:INodeData, config : Config) {
     
                 /*
                     var material = ?
@@ -87,7 +87,7 @@ module GravityGraph{
                 this.changeDefaults(config);
             }
     
-            private changeDefaults(config : Options) {
+            private changeDefaults(config : Config) {
                 this.position.set(0,0,0);
                 this.castShadow = config.shadows;
             }

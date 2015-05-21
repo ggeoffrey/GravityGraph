@@ -4,7 +4,7 @@ module GravityGraph{
     
     export class Visualisation3D {
     	
-        private config : Options;
+        private config : Config;
     	
     	private canvas:HTMLCanvasElement;
     
@@ -44,7 +44,7 @@ module GravityGraph{
         private U : Utils;
         
         
-    	constructor(config : Options, d3instance : D3Wrapper){
+    	constructor(config : Config, d3instance : D3Wrapper){
             
             this.config = config;
             

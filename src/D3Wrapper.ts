@@ -4,7 +4,7 @@ module GravityGraph{
 		
 		export class D3Wrapper{
 			
-			private config : Options;
+			private config : Config;
 			
 			private nodes : Array<any>;
 			private links : Array<any>;
@@ -18,7 +18,7 @@ module GravityGraph{
 			private working : boolean;
 			
 		
-			constructor( config: Options,  nodes = [], links = []){
+			constructor( config: Config,  nodes = [], links = []){
 				
 				this.config = config;
 				

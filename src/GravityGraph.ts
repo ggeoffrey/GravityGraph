@@ -25,7 +25,7 @@ module GravityGraph{
         
         
     
-        private config: Options;
+        private config: Config;
         
         private canvas:HTMLCanvasElement;
     
@@ -58,9 +58,9 @@ module GravityGraph{
         
         
     
-        constructor(config:IOptions) {
+        constructor(config:IConfig) {
     
-            this.config = new Options(config);
+            this.config = new Config(config);
             this.canvas = <HTMLCanvasElement> document.getElementById(this.config.target);
             this.events = new Events();
             
