@@ -3,7 +3,8 @@
 /// <reference path='three-orbitcontrols.d.ts' />
 /// <reference path='three-projector.d.ts' />
 
-declare enum EQuality{}   // implemented in Utils.ts
+declare enum EQuality{}  // implemented in Utils.ts
+declare enum ERelation{} // implemented in GravityGraph.ts
 
 
 interface IWorker extends Worker{

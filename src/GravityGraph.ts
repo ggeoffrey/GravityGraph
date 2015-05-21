@@ -15,6 +15,13 @@
 declare var Stats;
 declare var TWEEN ;
 
+enum ERelation{
+    INNER,
+    OUTER,
+    INNER_OUTER,
+    SELF
+}
+
 var U = new Utils();
 
 class GravityGraph {
@@ -327,16 +334,20 @@ class GravityGraph {
         }
     }
     
-    public focusOnRelations(nodes ? : Array<Node3D>){
+    public focusOnRelations(nodes ? : Array<Node3D>, type : ERelation = ERelation.SELF){
         var relations : IGraph = {
             nodes : [],
             links : []
         };
         
-        if(!nodes && this.vis3D.getSelectedNode()){
+        var nodeOfGroup : Node3D;   // a node of the focused group for coparision with other nodes 
+        
+        if( type == ERelation.SELF && this.vis3D.getSelectedNode()){
+            nodeOfGroup = this.vis3D.getSelectedNode();
             relations = this.getRelationsOf(this.vis3D.getSelectedNode());
         }
         else if (nodes){
+            nodeOfGroup = nodes[0];
             nodes.forEach((node)=>{
                 var rel = this.getRelationsOf(node);
                 relations.nodes = relations.nodes.concat(rel.nodes);
@@ -357,19 +368,39 @@ class GravityGraph {
                }
             });
             this.links.forEach((link)=>{
-               if(relations.links.indexOf(link) != -1){
-                   link.setFocused();
-                   link.getText().setFocused();
+               if(relations.links.indexOf(link) != -1 ){  // if link is candidate
+                   
+                   
+                   
+                   
+                   if(type == ERelation.SELF || type == ERelation.INNER_OUTER){
+                       link.setFocused();
+                       link.getText().setFocused();
+                   }
+                   else if(type == ERelation.OUTER && !link.getTarget().isSameGroupOf(link.getSource())){
+                        link.setFocused();
+                        link.getText().setFocused();    
+                   }
+                   else if(type == ERelation.INNER && link.getTarget().isSameGroupOf(link.getSource()) ){
+                       link.setFocused();
+                       link.getText().setFocused();
+                   }
+                   else{
+                        link.setUnFocused();
+                        link.getText().setUnFocused();
+                   }
+                   
+                        
                }
                else{
                    link.setUnFocused();
-                   link.getText().setFocused();
+                   link.getText().setUnFocused();
                }
             });
         }
     }
     
-    public focusOnGroup(){
+    public focusOnGroupRelations(relationType : ERelation = ERelation.INNER){
         var nodes : Array<Node3D> = [];
         
         if(this.vis3D.getSelectedNode()){
@@ -385,7 +416,7 @@ class GravityGraph {
            });
            
            if(nodes){
-               this.focusOnRelations(nodes);
+               this.focusOnRelations(nodes, relationType);
            }
         }
         

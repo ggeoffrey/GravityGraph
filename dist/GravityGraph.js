@@ -1270,6 +1270,13 @@ var Visualisation3D = (function () {
 /// <reference path="Visualisation3D.ts" />
 /// <reference path="D3Wrapper.ts" />
 /// <reference path='Events.ts' />
+var ERelation;
+(function (ERelation) {
+    ERelation[ERelation["INNER"] = 0] = "INNER";
+    ERelation[ERelation["OUTER"] = 1] = "OUTER";
+    ERelation[ERelation["INNER_OUTER"] = 2] = "INNER_OUTER";
+    ERelation[ERelation["SELF"] = 3] = "SELF";
+})(ERelation || (ERelation = {}));
 var U = new Utils();
 var GravityGraph = (function () {
     function GravityGraph(config) {
@@ -1466,16 +1473,20 @@ var GravityGraph = (function () {
             });
         }
     };
-    GravityGraph.prototype.focusOnRelations = function (nodes) {
+    GravityGraph.prototype.focusOnRelations = function (nodes, type) {
         var _this = this;
+        if (type === void 0) { type = 3 /* SELF */; }
         var relations = {
             nodes: [],
             links: []
         };
-        if (!nodes && this.vis3D.getSelectedNode()) {
+        var nodeOfGroup; // a node of the focused group for coparision with other nodes 
+        if (type == 3 /* SELF */ && this.vis3D.getSelectedNode()) {
+            nodeOfGroup = this.vis3D.getSelectedNode();
             relations = this.getRelationsOf(this.vis3D.getSelectedNode());
         }
         else if (nodes) {
+            nodeOfGroup = nodes[0];
             nodes.forEach(function (node) {
                 var rel = _this.getRelationsOf(node);
                 relations.nodes = relations.nodes.concat(rel.nodes);
@@ -1493,18 +1504,33 @@ var GravityGraph = (function () {
             });
             this.links.forEach(function (link) {
                 if (relations.links.indexOf(link) != -1) {
-                    link.setFocused();
-                    link.getText().setFocused();
+                    if (type == 3 /* SELF */ || type == 2 /* INNER_OUTER */) {
+                        link.setFocused();
+                        link.getText().setFocused();
+                    }
+                    else if (type == 1 /* OUTER */ && !link.getTarget().isSameGroupOf(link.getSource())) {
+                        link.setFocused();
+                        link.getText().setFocused();
+                    }
+                    else if (type == 0 /* INNER */ && link.getTarget().isSameGroupOf(link.getSource())) {
+                        link.setFocused();
+                        link.getText().setFocused();
+                    }
+                    else {
+                        link.setUnFocused();
+                        link.getText().setUnFocused();
+                    }
                 }
                 else {
                     link.setUnFocused();
-                    link.getText().setFocused();
+                    link.getText().setUnFocused();
                 }
             });
         }
     };
-    GravityGraph.prototype.focusOnGroup = function () {
+    GravityGraph.prototype.focusOnGroupRelations = function (relationType) {
         var _this = this;
+        if (relationType === void 0) { relationType = 0 /* INNER */; }
         var nodes = [];
         if (this.vis3D.getSelectedNode()) {
             this.nodes.forEach(function (node) {
@@ -1517,7 +1543,7 @@ var GravityGraph = (function () {
                 }
             });
             if (nodes) {
-                this.focusOnRelations(nodes);
+                this.focusOnRelations(nodes, relationType);
             }
         }
     };

@@ -21,8 +21,14 @@
         <button onclick="gravityGraph.focusOnRelations()">
             Show relations
         </button>
-        <button onclick="gravityGraph.focusOnGroup()">
+        <button onclick="gravityGraph.focusOnGroupRelations(ERelation.INNER_OUTER)">
             Show group relations
+        </button>
+        <button onclick="gravityGraph.focusOnGroupRelations(ERelation.INNER)">
+            Show group internal relations
+        </button>
+        <button onclick="gravityGraph.focusOnGroupRelations(ERelation.OUTER)">
+            Show group external relations
         </button>
         Charge : <input id="charge" type="range" min="-150" max="10" step="1" onchange="changeCharge(this.value);"/>
          <span id="chargeVal"></span>
@@ -102,7 +108,7 @@
         });
         
         
-        /*
+        
         d3.json("data-test/miserables.json", function(error, graph) {
             if (error) {
                 console.error(error);
@@ -114,16 +120,18 @@
                 gravityGraph.start();
                 
                 
+                /*
                 setTimeout(function () {
                     gravityGraph.setNodes(graph.nodes.slice(0,15));
                     gravityGraph.setLinks(graph.links);
                     gravityGraph.start();
                 }, 500);
+                */
                 
                 
             }
         });
-        */
+        
         
         
         
@@ -224,7 +232,7 @@
             
         }
         
-        testLogs();
+        //testLogs();
         
         
         
