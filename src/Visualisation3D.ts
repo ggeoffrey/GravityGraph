@@ -59,10 +59,15 @@ class Visualisation3D {
     
     private events : Events;
     
+    // utils
+    private U : Utils;
+    
     
 	constructor(config : Options, d3instance : D3Wrapper){
         
         this.config = config;
+        
+        this.U = new Utils();
         
         this.d3Instance = d3instance;
         
@@ -765,7 +770,23 @@ class Visualisation3D {
         
         var position = [];
         
-        nodes.forEach((node)=> {
+        var flattened = nodes;
+        
+        
+        
+        if(this.U.isObject(nodes)){
+            
+            flattened = [];
+            for (var name in nodes) {
+                if (nodes.hasOwnProperty(name)) {
+                    flattened.push(nodes[name]);                    
+                }
+            }
+        }        
+        
+        
+        
+        flattened.forEach((node)=> {
             var n = new Node3D(node, this.config);
             this.nodes.push(n);
             this.rootObject3D.add(n);
@@ -800,10 +821,18 @@ class Visualisation3D {
             var filteredLinks = [];
             
             links.forEach((link)=> {
+                
+                if(typeof link.source === "string"){
+                    link.source = this.indexOf(link.source);
+                }
+                if(typeof link.target === "string"){
+                    link.target = this.indexOf(link.target);
+                }
+                
                 var source = this.nodes[link.source];
                 var target = this.nodes[link.target];
                 
-                if(source && target ){
+                if(source && target && source != target ){
                     
                     filteredLinks.push(link);
                     var link3D = new Link3D(source, target, link);
@@ -825,6 +854,23 @@ class Visualisation3D {
             
             return this.links;
         }
+    }
+    
+    
+    
+    private indexOf(name : string) : number {
+        var foundAt = 0, node;
+        
+        for (var i = 0; i < this.nodes.length; i++) {
+            node = this.nodes[i].getData();
+            if(node.name == name){
+                foundAt = i;
+                break;
+            }
+        }
+        
+        
+        return foundAt;
     }
     
     

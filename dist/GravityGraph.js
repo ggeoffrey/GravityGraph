@@ -205,6 +205,12 @@ var Utils = (function () {
     Utils.prototype.isNumeric = function (item) {
         return !isNaN(parseFloat(item));
     };
+    Utils.prototype.isArray = function (item) {
+        return Object.prototype.toString.call(item) === "[object Array]";
+    };
+    Utils.prototype.isObject = function (item) {
+        return Object.prototype.toString.call(item) === "[object Object]";
+    };
     Utils.prototype.parseBoolean = function (item) {
         var ret = !!item;
         if (item == "true") {
@@ -740,6 +746,7 @@ var Visualisation3D = (function () {
         this.zeroVect = new THREE.Vector3();
         this.nbUpdate = 0;
         this.config = config;
+        this.U = new Utils();
         this.d3Instance = d3instance;
         this.events = new Events();
         this.useFoci = false;
@@ -1172,7 +1179,16 @@ var Visualisation3D = (function () {
         this.nodes = [];
         this.foci = new Foci();
         var position = [];
-        nodes.forEach(function (node) {
+        var flattened = nodes;
+        if (this.U.isObject(nodes)) {
+            flattened = [];
+            for (var name in nodes) {
+                if (nodes.hasOwnProperty(name)) {
+                    flattened.push(nodes[name]);
+                }
+            }
+        }
+        flattened.forEach(function (node) {
             var n = new Node3D(node, _this.config);
             _this.nodes.push(n);
             _this.rootObject3D.add(n);
@@ -1198,9 +1214,15 @@ var Visualisation3D = (function () {
             this.d3Instance.setLinks([]);
             var filteredLinks = [];
             links.forEach(function (link) {
+                if (typeof link.source === "string") {
+                    link.source = _this.indexOf(link.source);
+                }
+                if (typeof link.target === "string") {
+                    link.target = _this.indexOf(link.target);
+                }
                 var source = _this.nodes[link.source];
                 var target = _this.nodes[link.target];
-                if (source && target) {
+                if (source && target && source != target) {
                     filteredLinks.push(link);
                     var link3D = new Link3D(source, target, link);
                     _this.links.push(link3D);
@@ -1215,6 +1237,17 @@ var Visualisation3D = (function () {
             this.d3Instance.setLinks(filteredLinks);
             return this.links;
         }
+    };
+    Visualisation3D.prototype.indexOf = function (name) {
+        var foundAt = 0, node;
+        for (var i = 0; i < this.nodes.length; i++) {
+            node = this.nodes[i].getData();
+            if (node.name == name) {
+                foundAt = i;
+                break;
+            }
+        }
+        return foundAt;
     };
     Visualisation3D.prototype.on = function (name, action) {
         this.events.add(name, action);
