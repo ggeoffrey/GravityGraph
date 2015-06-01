@@ -1,5 +1,9 @@
 
 
+/// <reference path="headers/detector.d.ts" />
+/// <reference path="headers/d3.d.ts" />
+
+
 module GravityGraph {
 	
 	

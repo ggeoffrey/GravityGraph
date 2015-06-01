@@ -1,3 +1,4 @@
+/// <reference path="GlobalDefs.ts" />
 
 
 module GravityGraph {

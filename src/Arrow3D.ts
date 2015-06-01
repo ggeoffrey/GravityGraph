@@ -1,5 +1,6 @@
 /// <reference path="headers/three.d.ts" />
 
+/// <reference path="GravityGraph.ts" />
 
 /// <reference path="Link3D.ts" />
 /// <reference path="Node3D.ts" />

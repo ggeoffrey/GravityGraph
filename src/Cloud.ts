@@ -1,3 +1,5 @@
+/// <reference path="headers/three.d.ts" />
+/// <reference path="Link3D.ts" />
 
 
 module GravityGraph {

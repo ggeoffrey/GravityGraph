@@ -1,4 +1,7 @@
 
+/// <reference path="headers/three.d.ts" />
+/// <reference path="headers/createjs-lib.d.ts" />
+/// <reference path="Node3D" />
 
 
 

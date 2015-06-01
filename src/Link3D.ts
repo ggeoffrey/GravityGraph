@@ -1,4 +1,8 @@
 
+/// <reference path="headers/three.d.ts" />
+/// <reference path="Cloud.ts" />
+/// <reference path="Text3D.ts" />
+/// <reference path="Arrow3D.ts" />
 
 
 module GravityGraph {

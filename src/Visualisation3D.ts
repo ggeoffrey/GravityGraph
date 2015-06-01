@@ -1,3 +1,8 @@
+/// <reference path="headers/three" />
+/// <reference path="headers/three-orbitcontrols" />
+/// <reference path="headers/three-canvasrenderer" />
+/// <reference path="NodeSelectAnimation" />
+
 
 module GravityGraph{
     
