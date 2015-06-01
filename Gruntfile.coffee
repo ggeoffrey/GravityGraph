@@ -4,7 +4,17 @@ module.exports = (grunt)->
 
 
   vendorsList = [
-          "vendors/"
+          "vendors/d3.js",
+          "vendors/d3.layout.force3D.js",
+          "vendors/three.js",
+          "vendors/CanvasRenderer.js",
+          "vendors/Detector.js",
+          "vendors/OrbitControls.js",
+          "vendors/Projector.js",
+          "vendors/stats.min.js",
+          "vendors/tweenjs-0.6.0.min.js",
+          "vendors/droid_sans_regular.typeface.js",
+          "vendors/underscore-min.js",
         ]
 
   vendorsDest = "dist/vendors.js"
@@ -34,7 +44,7 @@ module.exports = (grunt)->
           module: 'commonjs'
           target: 'es5'
           sourceMap: true
-          declaration: false
+          declaration: true
       watch:
         src: clientList
         dest: clientDest
@@ -43,7 +53,7 @@ module.exports = (grunt)->
           module: 'commonjs'
           target: 'es5'
           sourceMap: true
-          declaration: false
+          declaration: true
           watch:
             atBegin: true
 
@@ -65,10 +75,10 @@ module.exports = (grunt)->
         dest: vendorsDest
       prod:
         src: [
-          "#{publicPath}/js/vendors.js"
-          "#{publicPath}/js/Mdrive.js"
+          "dist/vendors.js"
+          "dist/GravityGraph.js"
         ]
-        dest: "#{publicPath}/js/Mdrive.concat.js"
+        dest: "dist/GravityGraph.min.js"
 
 
     clean:
@@ -99,13 +109,16 @@ module.exports = (grunt)->
   grunt.loadNpmTasks 'grunt-typescript'
   grunt.loadNpmTasks 'grunt-typedoc'
 
+  grunt.registerTask 'prod', ['clean:prebuild', 'typescript:dev', 'concat:vendors', 'concat:prod', 'uglify:prod']
+
   grunt.registerTask 'doc', ['typedoc']
 
 
-  grunt.registerTask 'dist', ['clean:prebuild', 'typescript:dev'] #, 'concat:vendors']
+  grunt.registerTask 'dist', ['clean:prebuild', 'typescript:dev', 'concat:vendors']
   
   grunt.registerTask 'ts', ['typescript:dev']
   grunt.registerTask 'watch', ['typescript:watch']
+
   
   grunt.registerTask 'default', ['dist']
 

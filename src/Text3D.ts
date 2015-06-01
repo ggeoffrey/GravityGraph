@@ -1,5 +1,3 @@
-/// <reference path='headers/GravityGraph.d.ts' />
-
 
 module GravityGraph {
 	
