@@ -1384,7 +1384,32 @@ var GravityGraph;
         };
         Graph.prototype.setLinks = function (links) {
             var clone = JSON.parse(JSON.stringify(links));
+            clone = this.groupLinks(clone);
+            console.log(clone);
             this.links = this.vis3D.setLinks(clone);
+        };
+        Graph.prototype.groupLinks = function (links) {
+            var grouped = [];
+            var map = {};
+            var key;
+            for (var i = 0; i < links.length; i++) {
+                var link = links[i];
+                link.value = link.value || 0;
+                key = link.source + ":" + link.target;
+                if (!map[key]) {
+                    map[key] = link;
+                }
+                else {
+                    map[key].value += link.value;
+                }
+            }
+            for (var key in map) {
+                if (map.hasOwnProperty(key)) {
+                    var element = map[key];
+                    grouped.push(element);
+                }
+            }
+            return grouped;
         };
         // main loop  
         Graph.prototype.run = function (time) {

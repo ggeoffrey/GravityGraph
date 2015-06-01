@@ -166,7 +166,39 @@ module GravityGraph{
         
         public setLinks(links : Array<ILinkData>){
             var clone = JSON.parse(JSON.stringify(links));
+            clone = this.groupLinks(clone);
+            console.log(clone);
             this.links = this.vis3D.setLinks(clone);
+        }
+        
+        
+        private groupLinks(links : Array<ILinkData>) : Array<ILinkData> {
+            var grouped : Array<ILinkData> = [];
+            var map : {[index : string] : ILinkData} = {};
+            
+            var key;
+            for (var i = 0; i < links.length; i++) {
+                var link = links[i];
+                link.value = link.value || 0;
+                
+                key = link.source + ":" + link.target;
+                
+                if(!map[key]){
+                    map[key] = link;
+                }
+                else{
+                    map[key].value += link.value;
+                }
+            }
+            
+            for (var key in map) {
+                if (map.hasOwnProperty(key)) {
+                    var element = map[key];
+                    grouped.push(element);
+                }
+            }
+            
+            return grouped;
         }
         
         

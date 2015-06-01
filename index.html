@@ -86,7 +86,7 @@
             stats : true,
             charge : -100,
             distance : 60,
-            colorType : "20"  // 10, 20a, 20b, 20c
+            colorType : "10"  // 10, 20a, 20b, 20c
         });
         
         
@@ -109,8 +109,9 @@
         
         
         
-        d3.json("data-test/miserables.json", function(error, graph) {
+        d3.json("data-test/activity.json", function(error, graph) {
             if (error) {
+                console.log("Error getting data");
                 console.error(error);
             }
             else {
@@ -232,7 +233,7 @@
             
         }
         
-        //testLogs();
+       //testLogs();
         
         
         
