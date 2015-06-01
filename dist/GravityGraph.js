@@ -21,7 +21,7 @@ var GravityGraph;
             if (Node3D.materialsMap[color]) {
                 material = Node3D.materialsMap[color];
             }
-            else if (config.quality == 2 /* HIGH */) {
+            else if (config.quality == GravityGraph.EQuality.HIGH) {
                 Node3D.OPACITY = 0.95;
                 material = new THREE.MeshLambertMaterial({
                     color: color,
@@ -32,7 +32,7 @@ var GravityGraph;
                 });
                 Node3D.materialsMap[color] = material;
             }
-            else if (config.quality < 2 /* HIGH */) {
+            else if (config.quality < GravityGraph.EQuality.HIGH) {
                 Node3D.OPACITY = 1;
                 material = new THREE.MeshBasicMaterial({
                     color: color,
@@ -80,7 +80,7 @@ var GravityGraph;
             this.material.needsUpdate = true;
         };
         Node3D.prototype.updateTarget = function (position) {
-            if (this.quality == 0 /* LOW */) {
+            if (this.quality == GravityGraph.EQuality.LOW) {
                 this.lookAt(position);
             }
         };
@@ -126,7 +126,7 @@ var GravityGraph;
             this.nbParticles = 10;
             var geometry = new THREE.Geometry();
             for (var i = 0; i < this.nbParticles; i++) {
-                geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+                geometry.vertices.push(new THREE.Vector3(0, 0, 0 /*+ i * 5*/));
             }
             _super.call(this, geometry, Cloud.defaultMaterial);
             this.support.setCloud(this);
@@ -194,9 +194,7 @@ var GravityGraph;
             var materialFront = new THREE.MeshBasicMaterial({ color: 0xffffff });
             var materialArray = [materialFront];
             var textGeom = new THREE.TextGeometry(support.getData().value + " >", {
-                size: 3,
-                height: 0,
-                curveSegments: 1,
+                size: 3, height: 0, curveSegments: 1,
                 font: "droid sans",
             });
             // font: helvetiker, gentilis, droid sans, droid serif, optimer
@@ -256,18 +254,10 @@ var GravityGraph;
         Link3D.prototype.setCloud = function (c) {
             this.cloud = c;
         };
-        Link3D.prototype.getCloud = function () {
-            return this.cloud;
-        };
-        Link3D.prototype.getLineLength = function () {
-            return this.lineLength;
-        };
-        Link3D.prototype.getSource = function () {
-            return this.source;
-        };
-        Link3D.prototype.getTarget = function () {
-            return this.target;
-        };
+        Link3D.prototype.getCloud = function () { return this.cloud; };
+        Link3D.prototype.getLineLength = function () { return this.lineLength; };
+        Link3D.prototype.getSource = function () { return this.source; };
+        Link3D.prototype.getTarget = function () { return this.target; };
         Link3D.prototype.getArrow = function () {
             return this.arrow;
         };
@@ -353,7 +343,7 @@ var GravityGraph;
             this.U = new GravityGraph.Utils();
             this._config = config;
             this.webglAvailable = Detector.webgl;
-            if (this.quality > 1 /* MEDIUM */ && !this.isWebGL()) {
+            if (this.quality > GravityGraph.EQuality.MEDIUM && !this.isWebGL()) {
                 this._config.quality = "medium";
                 console.warn("Degraded mode ! (slower)");
                 console.warn("WebGL is disabled, your drivers, your DirectX version or your browser are outdated.");
@@ -369,16 +359,16 @@ var GravityGraph;
         });
         Object.defineProperty(Config.prototype, "quality", {
             get: function () {
-                var quality = 2 /* HIGH */;
+                var quality = GravityGraph.EQuality.HIGH;
                 switch (this._config.quality) {
                     case "high":
-                        quality = 2 /* HIGH */;
+                        quality = GravityGraph.EQuality.HIGH;
                         break;
                     case "medium":
-                        quality = 1 /* MEDIUM */;
+                        quality = GravityGraph.EQuality.MEDIUM;
                         break;
                     case "low":
-                        quality = 0 /* LOW */;
+                        quality = GravityGraph.EQuality.LOW;
                         break;
                 }
                 return quality;
@@ -468,7 +458,7 @@ var GravityGraph;
         };
         Object.defineProperty(Config.prototype, "shadows", {
             get: function () {
-                return this.U.parseBoolean(this._config.shadows) && this.quality > 1 /* MEDIUM */ && this.isWebGL();
+                return this.U.parseBoolean(this._config.shadows) && this.quality > GravityGraph.EQuality.MEDIUM && this.isWebGL();
             },
             enumerable: true,
             configurable: true
@@ -507,23 +497,28 @@ var GravityGraph;
             this.material.opacity = 1;
             this.material.needsUpdate = true;
             this.animatedObject = { scaleCircle: 0, scaleNode: 1 };
-            this.animation = new createjs.Tween(this.animatedObject).to({
+            this.animation = new createjs.Tween(this.animatedObject)
+                .to({
                 scaleCircle: 3000
-            }, 1000).call(function () {
+            }, 1000)
+                .call(function () {
                 //createjs.Tween.removeTweens(this.animatedObject);
                 _this.firstExpand = false;
                 _this.animatedObject.scaleCircle = 0;
                 _this.animation = new createjs.Tween(_this.animatedObject, {
                     loop: true,
-                }).to({
+                })
+                    .to({
                     scaleCircle: 100,
                 }, 1000);
             });
             this.animation2 = new createjs.Tween(this.animatedObject, {
                 loop: true,
-            }).to({
+            })
+                .to({
                 scaleNode: 1.25
-            }, 500, createjs.Ease.backInOut).to({
+            }, 500, createjs.Ease.backInOut)
+                .to({
                 scaleNode: 1
             }, 500, createjs.Ease.backInOut);
         };
@@ -584,7 +579,7 @@ var GravityGraph;
             if (this.config.isWebGL()) {
                 this.renderer = new THREE.WebGLRenderer({
                     canvas: this.canvas,
-                    antialias: this.config.quality > 0 /* LOW */,
+                    antialias: this.config.quality > GravityGraph.EQuality.LOW,
                     alpha: transparentRenderer,
                     devicePixelRatio: window.devicePixelRatio
                 });
@@ -608,7 +603,7 @@ var GravityGraph;
             this.renderer.setSize(this.canvas.width, this.canvas.height);
             this.scene = new THREE.Scene();
             this.nodeSelectAnimation = new GravityGraph.NodeSelectAnimation();
-            if (this.config.quality == 2 /* HIGH */) {
+            if (this.config.quality == GravityGraph.EQuality.HIGH) {
                 this.sphereBackground = this.addBackground();
             }
             this.addCamera();
@@ -676,7 +671,7 @@ var GravityGraph;
             x = 3000;
             y = 3000;
             z = 3000;
-            if (this.config.quality < 2 /* HIGH */) {
+            if (this.config.quality < GravityGraph.EQuality.HIGH) {
                 this.scene.add(new THREE.HemisphereLight(0xffffff, 0xffffff));
             }
             else {
@@ -904,7 +899,10 @@ var GravityGraph;
             this.raycaster.set(this.camera.position, vector.sub(this.camera.position).normalize());
             var intersects = this.raycaster.intersectObjects([this.intersectPlane]);
             if (intersects.length > 0) {
-                this.projectionOffset.copy(intersects[0].point).sub(this.intersectPlane.position).add(this.rootObject3D.position);
+                this.projectionOffset
+                    .copy(intersects[0].point)
+                    .sub(this.intersectPlane.position)
+                    .add(this.rootObject3D.position);
                 return intersects[0];
             }
             return null;
@@ -1047,7 +1045,7 @@ var GravityGraph;
                         filteredLinks.push(link);
                         var link3D = new GravityGraph.Link3D(source, target, link);
                         _this.links.push(link3D);
-                        if (_this.config.flow && _this.config.isWebGL() && _this.config.quality > 0 /* LOW */) {
+                        if (_this.config.flow && _this.config.isWebGL() && _this.config.quality > GravityGraph.EQuality.LOW) {
                             var cloud = new GravityGraph.Cloud(link3D);
                             _this.clouds.push(cloud);
                             _this.rootObject3D.add(cloud);
@@ -1102,7 +1100,13 @@ var GravityGraph;
             else {
                 this.force = d3.layout.force3d();
             }
-            this.force.charge(this.config.charge).linkDistance(this.config.distance).size([1000, 1000]).nodes(this.nodes).links(this.links).on('tick', function () {
+            this.force
+                .charge(this.config.charge)
+                .linkDistance(this.config.distance)
+                .size([1000, 1000])
+                .nodes(this.nodes)
+                .links(this.links)
+                .on('tick', function () {
                 _this.tick();
             });
             this.force.on("end", function () {
@@ -1136,7 +1140,8 @@ var GravityGraph;
             this.idle = true;
             var k = 0;
             while ((!this.isStable()) && (k < limit)) {
-                this.force.tick(), k = k + 1;
+                this.force.tick(),
+                    k = k + 1;
             }
             this.idle = false;
             this.force.tick();
@@ -1442,13 +1447,13 @@ var GravityGraph;
         };
         Graph.prototype.focusOnRelations = function (nodes, type) {
             var _this = this;
-            if (type === void 0) { type = 3 /* SELF */; }
+            if (type === void 0) { type = ERelation.SELF; }
             var relations = {
                 nodes: [],
                 links: []
             };
             var nodeOfGroup; // a node of the focused group for coparision with other nodes 
-            if (type == 3 /* SELF */ && this.vis3D.getSelectedNode()) {
+            if (type == ERelation.SELF && this.vis3D.getSelectedNode()) {
                 nodeOfGroup = this.vis3D.getSelectedNode();
                 relations = this.getRelationsOf(this.vis3D.getSelectedNode());
             }
@@ -1471,15 +1476,15 @@ var GravityGraph;
                 });
                 this.links.forEach(function (link) {
                     if (relations.links.indexOf(link) != -1) {
-                        if (type == 3 /* SELF */ || type == 2 /* INNER_OUTER */) {
+                        if (type == ERelation.SELF || type == ERelation.INNER_OUTER) {
                             link.setFocused();
                             link.getText().setFocused();
                         }
-                        else if (type == 1 /* OUTER */ && !link.getTarget().isSameGroupOf(link.getSource())) {
+                        else if (type == ERelation.OUTER && !link.getTarget().isSameGroupOf(link.getSource())) {
                             link.setFocused();
                             link.getText().setFocused();
                         }
-                        else if (type == 0 /* INNER */ && link.getTarget().isSameGroupOf(link.getSource())) {
+                        else if (type == ERelation.INNER && link.getTarget().isSameGroupOf(link.getSource())) {
                             link.setFocused();
                             link.getText().setFocused();
                         }
@@ -1497,7 +1502,7 @@ var GravityGraph;
         };
         Graph.prototype.focusOnGroupRelations = function (relationType) {
             var _this = this;
-            if (relationType === void 0) { relationType = 0 /* INNER */; }
+            if (relationType === void 0) { relationType = ERelation.INNER; }
             var nodes = [];
             if (this.vis3D.getSelectedNode()) {
                 this.nodes.forEach(function (node) {
