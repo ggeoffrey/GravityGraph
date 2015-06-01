@@ -1316,7 +1316,6 @@ var GravityGraph;
         Graph.prototype.setLinks = function (links) {
             var clone = JSON.parse(JSON.stringify(links));
             clone = this.groupLinks(clone);
-            console.log(clone);
             this.links = this.vis3D.setLinks(clone);
         };
         Graph.prototype.groupLinks = function (links) {
@@ -1408,8 +1407,8 @@ var GravityGraph;
             var stats = new Stats();
             stats.setMode(0);
             stats.domElement.style.position = 'absolute';
-            stats.domElement.style.left = (this.canvas.offsetLeft + 5) + "px";
-            stats.domElement.style.top = (this.canvas.offsetTop + 5) + "px";
+            stats.domElement.style.right = 0;
+            stats.domElement.style.bottom = 0;
             this.canvas.parentElement.appendChild(stats.domElement);
             this.stats = stats;
         };
