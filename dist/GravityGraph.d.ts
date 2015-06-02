@@ -148,6 +148,7 @@ declare module GravityGraph {
 }
 declare module GravityGraph {
     class Config {
+        private static colorBuilder;
         private _config;
         private webglAvailable;
         private U;
@@ -300,7 +301,7 @@ declare module GravityGraph {
         /**
          * Initialise a 3D scene
          */
-        setNodes(nodes: Array<INodeData>): void;
+        setNodes(nodes: Array<INodeData>): Array<Node3D>;
         setLinks(links: Array<ILinkData>): void;
         private groupLinks(links);
         private run(time?);
@@ -311,6 +312,7 @@ declare module GravityGraph {
         resume(): void;
         setCharge(charge: number): void;
         setDistance(distance: number): void;
+        color(name: string): string;
         private addStats();
         on(name: string, action: Function): void;
         selectBy(idkey: string, value: any): void;

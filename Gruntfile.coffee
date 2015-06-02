@@ -69,7 +69,7 @@ module.exports = (grunt)->
 
     concat:
       options:
-        separator: '\n'
+        separator: '\n;\n'
       vendors:
         src: vendorsList
         dest: vendorsDest
@@ -109,7 +109,8 @@ module.exports = (grunt)->
   grunt.loadNpmTasks 'grunt-typescript'
   grunt.loadNpmTasks 'grunt-typedoc'
 
-  grunt.registerTask 'prod', ['clean:prebuild', 'typescript:dev', 'concat:vendors', 'concat:prod', 'uglify:prod']
+  grunt.registerTask 'prod', ['preprod', 'uglify:prod']
+  grunt.registerTask 'preprod', ['clean:prebuild', 'typescript:dev', 'concat:vendors', 'concat:prod']
 
   grunt.registerTask 'doc', ['typedoc']
 

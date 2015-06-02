@@ -155,7 +155,7 @@ module GravityGraph{
          */
            
     
-        public setNodes(nodes : Array<INodeData>){
+        public setNodes(nodes : Array<INodeData>) : Array<Node3D> {
             
             var clone = JSON.parse(JSON.stringify(nodes));
             
@@ -163,6 +163,8 @@ module GravityGraph{
             this.vis3D.setForce(this.force);
             
             this.nodes = this.vis3D.setNodes(clone);
+
+            return this.nodes;
         }
         
         public setLinks(links : Array<ILinkData>){
@@ -265,6 +267,10 @@ module GravityGraph{
         }
         
         
+
+        public color(name : string) : string {
+            return this.config.colorBuilder(name);
+        }
         
         
         

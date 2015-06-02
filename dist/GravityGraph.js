@@ -436,19 +436,22 @@ var GravityGraph;
         });
         Object.defineProperty(Config.prototype, "colorBuilder", {
             get: function () {
-                var ret = d3.scale.category20;
-                switch (this._config.colorType) {
-                    case "10":
-                        ret = d3.scale.category10;
-                        break;
-                    case "20b":
-                        ret = d3.scale.category20b;
-                        break;
-                    case "20c":
-                        ret = d3.scale.category20c;
-                        break;
+                if (!Config.colorBuilder) {
+                    var ret = d3.scale.category20;
+                    switch (this._config.colorType) {
+                        case "10":
+                            ret = d3.scale.category10;
+                            break;
+                        case "20b":
+                            ret = d3.scale.category20b;
+                            break;
+                        case "20c":
+                            ret = d3.scale.category20c;
+                            break;
+                    }
+                    Config.colorBuilder = ret();
                 }
-                return ret();
+                return Config.colorBuilder;
             },
             enumerable: true,
             configurable: true
@@ -463,6 +466,7 @@ var GravityGraph;
             enumerable: true,
             configurable: true
         });
+        Config.colorBuilder = null;
         return Config;
     })();
     GravityGraph.Config = Config;
@@ -1317,6 +1321,7 @@ var GravityGraph;
             this.force = new GravityGraph.D3Wrapper(this.config);
             this.vis3D.setForce(this.force);
             this.nodes = this.vis3D.setNodes(clone);
+            return this.nodes;
         };
         Graph.prototype.setLinks = function (links) {
             var clone = JSON.parse(JSON.stringify(links));
@@ -1386,6 +1391,9 @@ var GravityGraph;
         };
         Graph.prototype.setDistance = function (distance) {
             this.force.setDistance(distance);
+        };
+        Graph.prototype.color = function (name) {
+            return this.config.colorBuilder(name);
         };
         // D3
         /*
