@@ -2,6 +2,7 @@
 /// <reference path="headers/three-orbitcontrols" />
 /// <reference path="headers/three-canvasrenderer" />
 /// <reference path="NodeSelectAnimation" />
+/// <reference path="Foci" />
 
 
 module GravityGraph{

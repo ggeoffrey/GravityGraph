@@ -64,12 +64,12 @@ module GravityGraph{
     
     
     export interface IWorker extends Worker{
-        postMessage(message : IWorkerMessaqe, rest? : any) : void;
+        postMessage(message : IWorkerMessaae, rest? : any) : void;
     }
     
-    export interface IWorkerMessaqe { // extends MessageEvent{
+    export interface IWorkerMessaae { // extends MessageEvent{
         message : string;
         content : any;
-        type : string;
+        config? : IConfig;
     }
 }
