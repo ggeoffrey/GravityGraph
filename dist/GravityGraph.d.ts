@@ -121,12 +121,12 @@ declare module GravityGraph {
         setUnFocused(): void;
     }
     interface IWorker extends Worker {
-        postMessage(message: IWorkerMessaqe, rest?: any): void;
+        postMessage(message: IWorkerMessaae, rest?: any): void;
     }
-    interface IWorkerMessaqe {
+    interface IWorkerMessaae {
         message: string;
         content: any;
-        type: string;
+        config?: IConfig;
     }
 }
 /**
@@ -181,6 +181,17 @@ declare module GravityGraph {
         setPosition(node: Node3D): void;
         show(): void;
         hide(): void;
+    }
+}
+declare module GravityGraph {
+    class Foci {
+        private foci;
+        private names;
+        constructor();
+        addFocus(name: string): void;
+        addAllFocus(key: string, array: Array<any>): void;
+        private computeRepartition();
+        getPositionOf(name: any): IPoint;
     }
 }
 declare module GravityGraph {
@@ -334,16 +345,5 @@ declare module GravityGraph {
         update(): void;
         setFocused(): void;
         setUnFocused(): void;
-    }
-}
-declare module GravityGraph {
-    class Foci {
-        private foci;
-        private names;
-        constructor();
-        addFocus(name: string): void;
-        addAllFocus(key: string, array: Array<any>): void;
-        private computeRepartition();
-        getPositionOf(name: any): IPoint;
     }
 }

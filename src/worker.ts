@@ -1,110 +1,85 @@
 /**
  * Created by Geoffrey on 04/04/2015.
  */
-
-
-
+ 
+/// <reference path="GlobalDefs" />
+/// <reference path="Node3D" />
+/// <reference path="Link3D" />
+/// <reference path="Text3D" />
 
 /*
 
-importScripts("../vendors/d3.js");
+importScripts(
+    "../vendors/d3.js",
+    "../vendors/three.js",
+    "../dist/GravityGraph.js"
+);
 
 
-
-class D3Worker{
-
-
-    private worker : IWorker;
-
-
-    private force : D3.Layout.ForceLayout;
-
-    private nodes : Array<INodeData>;
-
-    private links : Array<ILinkData>;
-
-
-    constructor( worker : IWorker ){
-        this.worker = worker;
-
-
-        this.worker.onmessage = (event : MessageEvent)=>{
-            switch (event.data.message){
-                case "setNodes" :
-                    this.nodes = event.data.content;
-                    this.force.nodes(this.nodes);
-                    this.skipEnter();
-                    break;
-                case "setLinks" :
-                    this.links = event.data.content;
-                    this.run();
-                    break;
-                default :
-                    break;
+module GravityGraph{
+    
+    export class D3Worker{
+    
+    
+        private worker : IWorker;
+    
+        private nodes : Array<INodeData>;
+    
+        private links : Array<ILinkData>;
+        
+        private graph : IGraph;
+    
+        constructor( worker : IWorker ){
+            this.worker = worker;    
+    
+            this.worker.onmessage = (event : MessageEvent)=>{
+                var arrData = event.data.content;
+                var config = new Config(event.data.config);
+                
+                switch (event.data.message){
+                    case "prepareNodes" :
+                        this.prepareNodes(arrData, config);
+                        break;        
+                    case "prepareLinks" :
+                        this.prepareLinks(arrData, config);
+                        break;                    
+                    default :
+                        break;
+                }
             }
-        }
-
-        this.init();
-
-        this.run();
-        this.worker.postMessage({
-            message : "log",
-            type: "string",
-            content: "D3 Worker ready"
-        });
-    }
 
 
-    private init(){
-        this.force = d3.layout.force();
-
-        this.force
-            .charge(-100)
-            .linkDistance(60)
-            .size([100,100])
-            .on('tick', ()=>{
-                this.tick();
+            this.worker.postMessage({
+                message : "log",
+                type: "string",
+                content: "D3 Worker ready"
             });
-
-
-
-    }
-
-
-
-    private run() : void {
-        if(this.nodes != undefined){
-            this.force.start();
         }
-    }
-
-    private skipEnter(): void {
-        this.run();
-        var i = 0;
-        while(this.force.alpha() > 1e-2 ){
-            this.force.tick();
-            i++;
+        
+        
+        
+        
+        
+        
+        private prepareNodes(nodesData : Array<INodeData>, config:Config) : Array<Node3D> {
+            
         }
-
-        this.force.stop();
+            
+        private prepareLinks(nodesData : Array<INodeData>, config:Config) : Array<Link3D> {
+            
+        }
+        
     }
 
+    // START
+    
+    
+    ((self: IWorker) => {
+        new D3Worker(self);
+    })(<any>self);
 
-    private tick(){
-        this.worker.postMessage({
-            message : "tick",
-            type: "array",
-            content : this.nodes
-        });
-    }
+
 }
 
-// START
-
-
-((self: IWorker) => {
-
-    new D3Worker(self);
-})(<any>self);
 
 */
