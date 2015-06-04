@@ -96,6 +96,10 @@ module GravityGraph{
             public static setColorMethod(colorScale:D3.Scale.OrdinalScale) {
                 Node3D.nodesColor = colorScale;
             }
+
+            public static resetColorMethod(){
+                Node3D.nodesColor = null;
+            }
     
             public getColor():THREE.Color {
                 var material = <THREE.MeshLambertMaterial> this.material;

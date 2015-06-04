@@ -16,6 +16,7 @@ declare module GravityGraph {
         constructor(data: INodeData, config: Config);
         private changeDefaults(config);
         static setColorMethod(colorScale: D3.Scale.OrdinalScale): void;
+        static resetColorMethod(): void;
         getColor(): THREE.Color;
         setColor(color: number): void;
         getData(): INodeData;
@@ -164,6 +165,7 @@ declare module GravityGraph {
         charge: number;
         distance: number;
         colorBuilder: D3.Scale.OrdinalScale;
+        resetColorBuilder(): void;
         isWebGL(): boolean;
         shadows: boolean;
     }

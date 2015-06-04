@@ -125,6 +125,10 @@ module GravityGraph {
 
             return Config.colorBuilder;
         }
+
+        public resetColorBuilder(){
+            Config.colorBuilder = null;
+        }
         
         public isWebGL(){
             return this.webglAvailable;

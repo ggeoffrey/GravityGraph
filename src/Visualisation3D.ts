@@ -744,6 +744,9 @@ module GravityGraph{
         }
         
         public setNodes( nodes : Array<any> ){
+
+            this.config.resetColorBuilder();
+            Node3D.resetColorMethod();
             
             this.nodes.forEach((n)=>{
                this.rootObject3D.remove(n); 
@@ -833,7 +836,10 @@ module GravityGraph{
                         }                    
                         
                         this.rootObject3D.add(link3D);
-                    }                
+                    }
+                    else{
+                        console.info(link.source + "->" + link.target + "  =  " + source + "->" + target);
+                    }
                     
                 });
                 

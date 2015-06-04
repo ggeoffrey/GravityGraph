@@ -62,6 +62,9 @@ var GravityGraph;
         Node3D.setColorMethod = function (colorScale) {
             Node3D.nodesColor = colorScale;
         };
+        Node3D.resetColorMethod = function () {
+            Node3D.nodesColor = null;
+        };
         Node3D.prototype.getColor = function () {
             var material = this.material;
             return material.color;
@@ -456,6 +459,9 @@ var GravityGraph;
             enumerable: true,
             configurable: true
         });
+        Config.prototype.resetColorBuilder = function () {
+            Config.colorBuilder = null;
+        };
         Config.prototype.isWebGL = function () {
             return this.webglAvailable;
         };
@@ -1036,6 +1042,8 @@ var GravityGraph;
         };
         Visualisation3D.prototype.setNodes = function (nodes) {
             var _this = this;
+            this.config.resetColorBuilder();
+            GravityGraph.Node3D.resetColorMethod();
             this.nodes.forEach(function (n) {
                 _this.rootObject3D.remove(n);
             });
@@ -1098,6 +1106,9 @@ var GravityGraph;
                             _this.rootObject3D.add(cloud);
                         }
                         _this.rootObject3D.add(link3D);
+                    }
+                    else {
+                        console.info(link.source + "->" + link.target + "  =  " + source + "->" + target);
                     }
                 });
                 this.d3Instance.setLinks(filteredLinks);
