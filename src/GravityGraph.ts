@@ -22,9 +22,7 @@ module GravityGraph{
     
     var U = new Utils();
     
-    export class Graph {
-        
-        
+    export class Graph {       
     
         private config: Config;
         
@@ -60,28 +58,42 @@ module GravityGraph{
         
     
         constructor(config:IConfig) {
+            
+            this.events = new Events();
     
             this.config = new Config(config);
             this.canvas = <HTMLCanvasElement> document.getElementById(this.config.target);
-            this.events = new Events();
-            
-    
-            console.info("GG : Init");
-            
-            this.force = new D3Wrapper(this.config);
-            this.vis3D = new Visualisation3D(this.config, this.force);
-    
+           
             this.paused = false;
-    
-            console.info("Starting main loop.");
-    
-            
+     
             if(this.config.stats){
                 this.addStats();
             }
+   
+        }       
+        
+        
+        private initialize() : void {
+            this.events.emit('info',['GravityGraph ("GG") : Init'])
             
-            // bind events
             
+            if(!this.config.isWebGL()){
+                this.events.emit('warn', ["Degraded mode ! (slower)"]);
+                this.events.emit('warn', ["WebGL is disabled, your drivers, your DirectX version, or your browser are outdated."]);
+                this.events.emit('warn', ["Please update your software.  (https://get.webgl.org/)"]);
+            }
+            
+            
+            this.force = new D3Wrapper(this.config);
+            this.vis3D = new Visualisation3D(this.config, this.force);
+            
+            
+            this.vis3D.on('info', (...args)=>{
+                this.events.emit('info', args);
+            });
+            this.vis3D.on('warn', (...args)=>{
+                this.events.emit('warn', args);
+            });
             
             this.vis3D.on("nodeOvered", (...args)=>{
                 this.events.emit("nodeOvered", args);
@@ -108,17 +120,14 @@ module GravityGraph{
                 //this.resetFocus();
             });
             
-            
-            // ----------------
-            
-    
+            if(this.config.isWebGL()){
+                this.events.emit('info',["GG: Everything ok ! Starting main loop."]);                
+            }
+            else{
+                this.events.emit('info',["GG: Starting main loop, running in degraded mode"]);
+            }
             this.run();
-    
-            /*this.D3Worker.postMessage({
-             message : "setNodes",
-             type: "array",
-             content : positions
-             });*/
+            
         }
     
         /*
@@ -155,22 +164,44 @@ module GravityGraph{
          */
            
     
-        public setNodes(nodes : Array<INodeData>) : Array<Node3D> {
+        public setNodes(nodes : Array<INodeData>, callback ? : (nodes : Array<Node3D>) => void ) : Array<Node3D> {
             
-            var clone = JSON.parse(JSON.stringify(nodes));
+            this.events.emit('busy', []);
+            var startTime = new Date().getTime();
             
-            this.force = new D3Wrapper(this.config);
-            this.vis3D.setForce(this.force);
+                var clone = JSON.parse(JSON.stringify(nodes));
             
-            this.nodes = this.vis3D.setNodes(clone);
-
+                this.force = new D3Wrapper(this.config);
+                this.vis3D.setForce(this.force);
+            
+                this.nodes = this.vis3D.setNodes(clone);
+            
+            var endTime = new Date().getTime();
+            this.events.emit('done', ["Nodes generation", (endTime-startTime)]);
+            
+            if(callback){
+                callback(this.nodes);
+            }
+            
             return this.nodes;
         }
         
-        public setLinks(links : Array<ILinkData>){
-            var clone = JSON.parse(JSON.stringify(links));
-            clone = this.groupLinks(clone);
-            this.links = this.vis3D.setLinks(clone);
+        public setLinks(links : Array<ILinkData>, callback ? : () => void){
+            
+            this.events.emit('busy', []);
+            var startTime = new Date().getTime();            
+            
+                var clone = JSON.parse(JSON.stringify(links));
+                clone = this.groupLinks(clone);
+                this.links = this.vis3D.setLinks(clone);
+            
+            var endTime = new Date().getTime();
+            this.events.emit('done', ["Links generation", (endTime-startTime)]);
+            
+            if(callback){
+                callback();
+            }
+            
         }
         
         
@@ -273,44 +304,22 @@ module GravityGraph{
         }
         
         
-        
-    
-    
-        // D3
-    
-        /*
-         private updateNodesPositions(positions : Array<INodeData>   ){
-    
-         var node_index = this.nodes.length-1;
-         var positions_index = positions.length-1;
-    
-         while(node_index >= 0 && positions_index >= 0){
-         var n = this.nodes[node_index];
-         var pos = positions[positions_index];
-         n.position.x = pos.x;
-         n.position.y = pos.y;
-         n.position.z = pos.z;
-    
-         node_index--;
-         positions_index--;
-         }
-    
-         }
-         */
-    
+     
     
         // UTILS
-    
-        
-    
-    
-    
-        
+       
         
         
         
         
         private addStats(){
+            
+            var actualNode = document.getElementById('stats');
+            if(actualNode){
+                actualNode.remove();
+                actualNode = undefined;
+            }
+            
             var stats = new Stats();
             
             stats.setMode(0);

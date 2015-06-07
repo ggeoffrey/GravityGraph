@@ -29,9 +29,6 @@ module GravityGraph {
             
             if(this.quality > EQuality.MEDIUM && ! this.isWebGL()){
                 this._config.quality = "medium";
-                console.warn("Degraded mode ! (slower)");
-                console.warn("WebGL is disabled, your drivers, your DirectX version or your browser are outdated.");
-                console.warn("Please update your software.  (https://get.webgl.org/)");
             }
             
         }

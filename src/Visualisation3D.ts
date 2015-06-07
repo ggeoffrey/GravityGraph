@@ -428,11 +428,10 @@ module GravityGraph{
             this.canvas.style.width = newWidth + "px";
             this.canvas.style.height = newHeight + "px";
     
-            if(!this.config.isFlat()){
-                var camera = <THREE.PerspectiveCamera> this.camera;
-                camera.aspect = newWidth/ newHeight;
-                camera.updateProjectionMatrix();
-            }
+            
+            var camera = <THREE.PerspectiveCamera> this.camera;
+            camera.aspect = newWidth/ newHeight;
+            camera.updateProjectionMatrix();            
     
     
             this.renderer.setSize( newWidth, newHeight);
@@ -796,13 +795,14 @@ module GravityGraph{
         public setLinks(links : Array<any>){       
             
             if(!this.nodes){
-                throw "setLinks : no nodes founds. You must set nodes before links";
+                throw "GG: setLinks() : no nodes founds. You must set nodes before links";
             }
             else{
                 
-                this.links.forEach((l)=>{
+                for (var i = 0; i < this.links.length; i++) {
+                    var l = this.links[i];
                     this.rootObject3D.remove(l);
-                });
+                }
                 
                 this.links = [];
                 this.clouds = [];
@@ -810,7 +810,9 @@ module GravityGraph{
                 
                 var filteredLinks = [];
                 
-                links.forEach((link)=> {
+                for (var j = 0; j < links.length; j++) {
+                    var link = links[j];
+
                     
                     if(typeof link.source === "string"){
                         link.source = this.indexOf(link.source);
@@ -838,10 +840,12 @@ module GravityGraph{
                         this.rootObject3D.add(link3D);
                     }
                     else{
-                        console.info(link.source + "->" + link.target + "  =  " + source + "->" + target);
+                        this.events.emit('warn', [
+                            "Bad link : " + link.source + "->" + link.target + "  =  " + source + "->" + target
+                        ]);
                     }
                     
-                });
+                }
                 
                 this.d3Instance.setLinks(filteredLinks);
                 
