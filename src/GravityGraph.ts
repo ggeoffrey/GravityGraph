@@ -74,7 +74,7 @@ module GravityGraph{
         
         
         public initialize() : void {
-            this.events.emit('info',['GravityGraph ("GG") : Init'])
+            this.events.emit('info',['GravityGraph : Init'])
             
             
             if(!this.config.isWebGL()){
@@ -124,7 +124,7 @@ module GravityGraph{
                 this.events.emit('info',["GG: Everything ok ! Starting main loop."]);                
             }
             else{
-                this.events.emit('info',["GG: Starting main loop, running in degraded mode"]);
+                this.events.emit('info',["GG: Starting main loop, running in compatibility mode"]);
             }
             this.run();
             

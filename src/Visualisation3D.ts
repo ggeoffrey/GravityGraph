@@ -575,9 +575,9 @@ module GravityGraph{
         public selectNode( node : Node3D, event? : MouseEvent ) : void {
             
             
-            if(event){
+            //if(event){
                 this.events.emit('nodeSelected', [event, node.getData()]);
-            }
+            //}
             
             if(this.selectedNode){
                 this.unselectNode(this.selectedNode);
@@ -775,7 +775,8 @@ module GravityGraph{
             
             
             
-            flattened.forEach((node)=> {
+            flattened.forEach((node, i)=> {
+                node.id = i;
                 var n = new Node3D(node, this.config);
                 this.nodes.push(n);
                 this.rootObject3D.add(n);
