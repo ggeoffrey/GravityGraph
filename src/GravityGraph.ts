@@ -73,8 +73,8 @@ module GravityGraph{
         }       
         
         
-        private initialize() : void {
-            this.events.emit('info',['GravityGraph ("GG") : Init'])
+        public initialize() : void {
+            this.events.emit('info',['GravityGraph ("GG") : Init'])
             
             
             if(!this.config.isWebGL()){
