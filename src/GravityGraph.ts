@@ -374,7 +374,9 @@ module GravityGraph{
             });
             if(this.links){
                 this.links.forEach((link) => {
-                    link.setFocused();
+                    if(!this.config.flow){
+                        link.setFocused();
+                    }
                     link.getText().setUnFocused();
                 });
             }
