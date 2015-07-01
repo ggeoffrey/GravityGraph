@@ -728,7 +728,6 @@ module GravityGraph{
                 while(i<len){
                     link = this.links[i];
                     link.geometry.computeBoundingBox();
-                    link.geometry.computeCentroid();
                     i++;
                 }
                 
@@ -813,7 +812,7 @@ module GravityGraph{
                 
                 for (var i = 0; i < this.links.length; i++) {
                     var l = this.links[i];
-                    this.scene.remove(l.getCloud());
+                    this.rootObject3D.remove(l.getCloud());
                     this.rootObject3D.remove(l);
                 }
                 
