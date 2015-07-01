@@ -106,6 +106,7 @@ module GravityGraph{
             
             this.renderer.shadowMapEnabled = this.config.shadows;
             this.renderer.shadowMapType = THREE.PCFShadowMap;
+            this.renderer.shadowMapDebug = false;
             this.renderer.sortObjects = false;
             
     
@@ -278,7 +279,8 @@ module GravityGraph{
             light.shadowCameraNear = 200;
             //if(!this.config.isFlat()){
                 var camera = <THREE.PerspectiveCamera> this.camera;
-                light.shadowCameraFar = camera.far;
+                
+                light.shadowCameraFar = camera.far*2;
             //}
             light.shadowCameraFov = 50;
     
@@ -308,7 +310,7 @@ module GravityGraph{
             });
             var sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
     
-            sphereBackground.receiveShadow = this.config.shadows;
+            sphereBackground.receiveShadow = true; // this.config.shadows;
             sphereBackground.scale.set(200, 200, 200);
     
             this.scene.add(sphereBackground);
@@ -416,7 +418,8 @@ module GravityGraph{
                 new THREE.PlaneBufferGeometry( 10, 10, 2, 2 ),
                 new THREE.MeshBasicMaterial( { color: 0x202020, opacity: 0.75, transparent: false } )
             );
-            this.intersectPlane.visible = false;        
+            this.intersectPlane.visible = false;
+            this.intersectPlane.receiveShadow = true;        
             this.intersectPlane.scale.set(1000,1000,1000);
             
             this.scene.add( this.intersectPlane );
@@ -837,7 +840,7 @@ module GravityGraph{
                     if(source && target && source != target ){
                         
                         filteredLinks.push(link);
-                        var link3D = new Link3D(source, target, link);
+                        var link3D = new Link3D(source, target, link, this.config);
                         
                         this.links.push(link3D);
             

@@ -19,27 +19,31 @@ module GravityGraph {
         
         private lineLength: number;
     
+        private config : Config;
     
         private cloud : Cloud;
         private arrow : Arrow3D;
         private text : Text3D;
         
     
-        constructor(source:Node3D, target:Node3D, data: ILinkData) {
+        constructor(source:Node3D, target:Node3D, data: ILinkData, config :Config) {
+    
+    
+            this.config = config;
     
             this.data = {
                 source : data.source,
                 target : data.target,
                 value : data.value
             };
-    
-            this.source = source;
-            this.target = target;
+            
             
             //this.arrow = new Arrow3D(this);
             this.text = new Text3D(this);
             //this.arrow.add(this.text);
             
+            this.source = source;
+            this.target = target;
             
             var geometry = new THREE.Geometry();
             geometry.vertices.push(this.source.position);
@@ -49,6 +53,9 @@ module GravityGraph {
             
             this.add(this.text);
             this.position = this.source.position;
+            this.castShadow = config.shadows;
+            this.visible = !this.config.flow;
+            
         }
             
         public getData(){
@@ -102,7 +109,9 @@ module GravityGraph {
         }
         
         public setUnFocused(){
-            if(this.cloud)  this.cloud.visible = false;
+            if(!this.config.flow){
+                if(this.cloud)  this.cloud.visible = false;                
+            }
             //this.arrow.setUnFocused();
             this.visible = false;
             //this.text.setUnFocused();        
