@@ -22,7 +22,7 @@ module GravityGraph{
     
     var U = new Utils();
     
-    export class Graph {       
+    export class Graph {
     
         private config: Config;
         
@@ -276,6 +276,11 @@ module GravityGraph{
             this.vis3D.start();
         }
     
+        public forceStart(){
+            this.force.stop();
+            this.force.start();
+        }
+
         public pause():void {
             this.paused = true;
         }

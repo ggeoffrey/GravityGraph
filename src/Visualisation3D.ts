@@ -214,7 +214,7 @@ module GravityGraph{
                 8000
            );
     
-           this.camera.position.z = 400;
+           this.camera.position.z = 1000;
     
         }
         
@@ -322,8 +322,15 @@ module GravityGraph{
             (<any> this.controls).panSpeed = 0.8;
             this.controls.noZoom = false;
             this.controls.noPan = false; //this.config.isFlat();
+
             ( <any> this.controls).staticMoving = true;
             ( <any> this.controls).dynamicDampingFactor = 0.3;
+
+            if(this.config.isFlat()){
+                this.controls.noRotate = true;
+            }
+
+            this.controls.noKeys = true;
         }
     
         private drawAxis():void {
@@ -718,6 +725,7 @@ module GravityGraph{
                 while(i<len){
                     link = this.links[i];
                     link.geometry.computeBoundingBox();
+                    link.geometry.computeCentroid();
                     i++;
                 }
                 
@@ -802,6 +810,7 @@ module GravityGraph{
                 
                 for (var i = 0; i < this.links.length; i++) {
                     var l = this.links[i];
+                    this.scene.remove(l.getCloud());
                     this.rootObject3D.remove(l);
                 }
                 

@@ -94,17 +94,28 @@ module GravityGraph{
 				this.force.tick();
 			}
 			
-			public calmDown(){
-				//this.stabilize(50);
+			public calmDown(limit = 300){
+				this.idle = true;
+				var k = 0;
+		        while (k < limit) {
+		        	this.force.tick(),
+		        	k = k + 1;
+		        }
+				this.idle = false;
+				this.force.tick();
+			}
+
+
+			public start(){
+				this.force.start();
+			}
+
+			public stop(){
+				this.force.stop();
 			}
 			
 			public shake(){
-				if(this.working){
-					this.force.resume();
-				}
-				else{
-					this.force.start();			
-				}
+				this.force.start();							
 			}
 			
 			public shakeHard(){
