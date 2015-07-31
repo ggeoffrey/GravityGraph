@@ -4,7 +4,7 @@ module.exports = (grunt)->
 
 
   vendorsList = [
-          "vendors/d3.min.js",
+          "vendors/d3.js",
           "vendors/d3.layout.force3D.js",
           "vendors/three.js",
           "vendors/CanvasRenderer.js",

@@ -192,7 +192,7 @@ module GravityGraph{
             var startTime = new Date().getTime();            
             
                 var clone = JSON.parse(JSON.stringify(links));
-                clone = this.groupLinks(clone);
+                //clone = this.groupLinks(clone);
                 this.links = this.vis3D.setLinks(clone);
             
             var endTime = new Date().getTime();
@@ -205,7 +205,7 @@ module GravityGraph{
         }
         
         
-        private groupLinks(links : Array<ILinkData>) : Array<ILinkData> {
+        /*private groupLinks(links : Array<ILinkData>) : Array<ILinkData> {
             var grouped : Array<ILinkData> = [];
             var map : {[index : string] : ILinkData} = {};
             
@@ -232,7 +232,7 @@ module GravityGraph{
             }
             
             return grouped;
-        }
+        }*/
         
         
         // main loop  
@@ -453,7 +453,7 @@ module GravityGraph{
             }
         }
         
-        public focusOnGroupRelations(relationType : ERelation = ERelation.INNER){
+        private focusOnGroupRelations(relationType : ERelation = ERelation.INNER){
             var nodes : Array<Node3D> = [];
             
             if(this.vis3D.getSelectedNode()){
@@ -474,8 +474,21 @@ module GravityGraph{
             }
             
         }
+
+        public focusOnAllGroupRelations(){
+            this.focusOnGroupRelations(ERelation.INNER_OUTER);
+        }
         
+        public focusOnExternalGroupRelations(){
+            this.focusOnGroupRelations(ERelation.OUTER);
+        }
         
+
+        public focusOnInternalGroupRelations(){
+            this.focusOnGroupRelations(ERelation.INNER);
+        }
+
+
         public separateGroups(separate : boolean = false){
             this.vis3D.separateGroups(separate);
             this.force.shake();
