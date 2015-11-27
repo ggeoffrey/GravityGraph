@@ -222,9 +222,9 @@ module GravityGraph{
         private addRoot(){
     
     
-            var z =  (this.config.isFlat() ? 0 : 1000);
+            var z =  (this.config.isFlat() ? 0 : 0);
     
-            var rootContainerPosition = new THREE.Vector3(1000, 1000, z);
+            var rootContainerPosition = new THREE.Vector3(0, 0, z);
     
             this.rootObject3D = new THREE.Object3D();
             this.rootObject3D.position.copy(rootContainerPosition).divideScalar(2).negate();

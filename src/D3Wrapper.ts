@@ -33,13 +33,13 @@ module GravityGraph{
 		            this.force = d3.layout.force();
 		        }
 		        else{
-		            this.force = (<any> d3.layout).force3d();
+		            this.force = (<any> d3.layout).force3d(); // now use 3D Barnes-Hut
 		        }
 		
 		        this.force
 		            .charge(this.config.charge)
 		            .linkDistance(this.config.distance)
-		            .size([1000, 1000])
+		            //.size([10, 10])
 					.nodes(this.nodes)
 					.links(this.links)
 					.on('tick', () => {

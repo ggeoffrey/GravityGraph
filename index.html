@@ -70,16 +70,20 @@
     </div>
 
     <div id="tooltip"></div>
-
-    <script src="vendors/three.js"></script>
+    
+    
+    <!--PROD-->
+    <script src="dist/GravityGraph.min.js"></script>
+    
+    <!--DEV-->
+    <!--<script src="vendors/three.js"></script>
     <script src="vendors/Detector.js"></script>
     <script src="vendors/OrbitControls.js"></script>
     <script src="vendors/CanvasRenderer.js"></script>
     <script src="vendors/Projector.js"></script>
         
-    <script src="vendors/d3.js"></script>
-    <script src="vendors/d3.layout.force3D.js"></script>
-        
+    <script src="vendors/d3-3d.js"></script>
+            
     <script src="vendors/stats.min.js"></script>
     <script src="vendors/tweenjs-0.6.0.min.js"></script>
         
@@ -89,9 +93,8 @@
     
     <script src="dist/GravityGraph.js"></script>
     
-    <!-- external -->
     
-    <script src="vendors/underscore-min.js"></script>
+    <script src="vendors/underscore-min.js"></script>-->
     
     
 
@@ -107,11 +110,11 @@
             quality : "high",
             shadows : true,
             flat : false,
-            flow : true,
+            flow : false,
             stats : true,
             charge : -100,
             distance : 60,
-            colorType : "10"  // 10, 20a, 20b, 20c
+            colorType : "20"  // 10, 20a, 20b, 20c
         });
         
         
@@ -144,7 +147,7 @@
         
         
         gravityGraph.on('busy', function(){
-           showSpinner(); 
+           //showSpinner(); 
         });
         
         gravityGraph.on('done', function(action, time){
@@ -179,7 +182,7 @@
         
         
         
-        d3.json("data-test/activity.json", function(error, graph) {
+        d3.json("data-test/miserables.json", function(error, graph) {
             if (error) {
                 console.log("Error getting data");
                 console.error(error);
